@@ -1,0 +1,31 @@
+name: Decoder fuzzing
+on:
+  schedule:
+    - cron: "17 3 * * 1"
+  workflow_dispatch:
+  push:
+    paths:
+      - "crates/sp-raw/**"
+      - "vendor/rawler/**"
+      - "fuzz/**"
+
+jobs:
+  raw-decode:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: fuzz
+      - run: cargo install cargo-fuzz --locked
+      - name: Fuzz seeded RAW corpus
+        working-directory: fuzz
+        run: cargo fuzz run raw_decode -- -max_total_time=1800 -rss_limit_mb=4096
+      - name: Upload reproducers
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: raw-decode-reproducers
+          path: fuzz/artifacts/raw_decode

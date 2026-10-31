@@ -1,0 +1,605 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>ShopPhoto · Advanced AI Features Research</title>
+  <style>
+    :root {
+      --bg: #090b0d;
+      --panel: #11161a;
+      --panel-2: #171e23;
+      --panel-3: #202a30;
+      --text: #eef3f2;
+      --muted: #9eabb0;
+      --faint: #657278;
+      --line: #28343a;
+      --acid: #c9f56a;
+      --cyan: #62dce5;
+      --violet: #a78bfa;
+      --orange: #ffb35c;
+      --red: #ff7a78;
+      --green: #77dc9a;
+      --max: 1180px;
+      --radius: 18px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 82% -4%, rgba(98,220,229,.12), transparent 33rem),
+        radial-gradient(circle at 10% 22%, rgba(167,139,250,.08), transparent 30rem),
+        var(--bg);
+      font: 16px/1.62 Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    a { color: var(--cyan); text-underline-offset: 3px; }
+    a:hover { color: #a6f8ff; }
+    button { font: inherit; }
+    .shell { width: min(var(--max), calc(100% - 36px)); margin: auto; }
+    .topbar {
+      position: sticky; top: 0; z-index: 50;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      background: rgba(9,11,13,.86); backdrop-filter: blur(18px);
+    }
+    .topbar .shell { display: flex; align-items: center; gap: 18px; min-height: 58px; }
+    .brand { display: flex; align-items: center; gap: 10px; margin-right: auto; font-weight: 760; }
+    .brand-mark { width: 24px; height: 24px; border: 2px solid var(--acid); border-radius: 50%; position: relative; }
+    .brand-mark::after { content: ""; position: absolute; inset: 5px; border: 2px solid var(--cyan); border-radius: 50%; }
+    nav { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+    nav a { color: var(--muted); text-decoration: none; white-space: nowrap; padding: 7px 10px; border-radius: 8px; font-size: .88rem; }
+    nav a:hover { color: var(--text); background: var(--panel-2); }
+    header { padding: 78px 0 34px; }
+    .eyebrow { color: var(--acid); text-transform: uppercase; letter-spacing: .15em; font-size: .73rem; font-weight: 800; }
+    h1 { max-width: 960px; margin: 10px 0 22px; font-size: clamp(2.7rem, 7vw, 6.35rem); line-height: .91; letter-spacing: -.065em; }
+    .lede { max-width: 850px; color: var(--muted); font-size: clamp(1.06rem, 2.1vw, 1.3rem); }
+    .meta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
+    .pill { display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); padding: 6px 11px; font-size: .82rem; background: rgba(17,22,26,.65); }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 14px currentColor; }
+    main { padding-bottom: 90px; }
+    section { scroll-margin-top: 78px; margin-top: 70px; }
+    h2 { margin: 0 0 12px; font-size: clamp(1.9rem, 4vw, 3.1rem); letter-spacing: -.045em; line-height: 1.05; }
+    h3 { margin: 0 0 8px; font-size: 1.12rem; }
+    p { margin: .6rem 0 1rem; }
+    .section-head { display: grid; grid-template-columns: minmax(0,1fr) minmax(280px,.62fr); gap: 28px; align-items: end; margin-bottom: 24px; }
+    .section-head p { color: var(--muted); max-width: 670px; margin: 0; }
+    .kicker { color: var(--cyan); font-weight: 760; font-size: .77rem; letter-spacing: .13em; text-transform: uppercase; margin-bottom: 8px; }
+    .grid { display: grid; gap: 14px; }
+    .grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .card { background: linear-gradient(145deg, rgba(23,30,35,.94), rgba(13,17,20,.97)); border: 1px solid var(--line); border-radius: var(--radius); padding: 21px; box-shadow: 0 22px 60px rgba(0,0,0,.18); }
+    .card p { color: var(--muted); }
+    .card > :last-child { margin-bottom: 0; }
+    .metric { color: var(--acid); font-size: 2.25rem; font-weight: 820; letter-spacing: -.05em; line-height: 1; margin-bottom: 10px; }
+    .verdict { border-color: rgba(201,245,106,.33); background: linear-gradient(145deg, rgba(33,46,33,.94), rgba(13,18,17,.98)); }
+    .verdict-label { color: var(--acid); text-transform: uppercase; font-size: .72rem; letter-spacing: .13em; font-weight: 850; }
+    .callout { padding: 17px 19px; border-radius: 13px; border: 1px solid rgba(98,220,229,.28); background: rgba(98,220,229,.065); }
+    .callout.warn { border-color: rgba(255,179,92,.32); background: rgba(255,179,92,.07); }
+    .callout strong { color: var(--text); }
+    .decision-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 22px; }
+    .decision { position: relative; padding: 17px; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; }
+    .decision b { display: block; color: var(--acid); font-size: .76rem; text-transform: uppercase; letter-spacing: .09em; margin-bottom: 6px; }
+    .decision:not(:last-child)::after { content: "→"; position: absolute; right: -9px; top: 50%; transform: translateY(-50%); color: var(--faint); z-index: 2; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 7px; margin: 16px 0; }
+    .tab, .mode-button { border: 1px solid var(--line); color: var(--muted); background: var(--panel-2); border-radius: 999px; padding: 7px 12px; cursor: pointer; }
+    .tab[aria-pressed="true"], .mode-button[aria-pressed="true"] { color: #081014; background: var(--acid); border-color: var(--acid); font-weight: 800; }
+    .demo { display: grid; grid-template-columns: minmax(0,1.5fr) minmax(270px,.75fr); border: 1px solid var(--line); border-radius: 20px; overflow: hidden; background: #0b0e10; }
+    .canvas { min-height: 510px; position: relative; overflow: hidden; background: #151b1f; }
+    .canvas img { width: 100%; height: 100%; display: block; object-fit: cover; position: absolute; inset: 0; }
+    .mask-layer { position: absolute; inset: 0; opacity: 0; transition: opacity .22s ease; mix-blend-mode: screen; pointer-events: none; }
+    .demo[data-mask="sky"] .mask-sky, .demo[data-mask="subject"] .mask-subject, .demo[data-mask="object"] .mask-object, .demo[data-mask="depth"] .mask-depth { opacity: 1; }
+    .mask-sky { background: linear-gradient(180deg, rgba(73,207,255,.82) 0 34%, transparent 60%); clip-path: polygon(0 0,100% 0,100% 43%,83% 37%,70% 44%,57% 35%,40% 45%,24% 34%,0 42%); }
+    .mask-subject { width: 9%; height: 31%; left: 59%; top: 40%; right: auto; bottom: auto; background: rgba(201,245,106,.82); border-radius: 44% 44% 25% 25% / 14% 14% 8% 8%; filter: blur(3px); }
+    .mask-object { width: 39%; height: 42%; left: 5%; top: 50%; right: auto; bottom: auto; background: rgba(255,122,120,.82); clip-path: polygon(12% 27%,70% 0,100% 68%,28% 100%,0 69%); }
+    .mask-depth { background: linear-gradient(90deg, rgba(255,99,92,.75), rgba(255,207,91,.65) 27%, rgba(63,231,179,.54) 54%, rgba(70,141,255,.72)); mix-blend-mode: color; }
+    .crosshair { position: absolute; left: 63%; top: 52%; width: 30px; height: 30px; border: 2px solid white; border-radius: 50%; box-shadow: 0 0 0 5px rgba(0,0,0,.28); }
+    .crosshair::before, .crosshair::after { content: ""; position: absolute; background: white; }
+    .crosshair::before { width: 10px; height: 2px; left: 8px; top: 12px; }
+    .crosshair::after { width: 2px; height: 10px; left: 12px; top: 8px; }
+    .demo-panel { padding: 22px; background: linear-gradient(180deg, #161d22, #101519); }
+    .demo-panel .label { color: var(--faint); font-size: .76rem; text-transform: uppercase; letter-spacing: .12em; }
+    .mask-row { display: flex; align-items: center; gap: 9px; padding: 11px 0; border-bottom: 1px solid var(--line); }
+    .mask-swatch { width: 12px; height: 12px; border-radius: 50%; background: var(--cyan); }
+    .slider { margin: 16px 0; }
+    .slider label { display: flex; justify-content: space-between; color: var(--muted); font-size: .88rem; }
+    .track { height: 5px; border-radius: 99px; background: #303b40; margin-top: 8px; position: relative; }
+    .track::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: var(--fill, 60%); background: var(--cyan); border-radius: inherit; }
+    .track::after { content: ""; position: absolute; left: calc(var(--fill, 60%) - 6px); top: -4px; width: 13px; height: 13px; border-radius: 50%; background: white; }
+    .fineprint { color: var(--faint); font-size: .79rem; }
+    .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 16px; background: rgba(17,22,26,.78); }
+    table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+    th, td { padding: 12px 13px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
+    th { color: var(--muted); font-size: .75rem; letter-spacing: .06em; text-transform: uppercase; background: rgba(255,255,255,.018); }
+    tbody tr:last-child td { border-bottom: 0; }
+    td:first-child { color: var(--text); font-weight: 720; }
+    .tag { display: inline-block; margin: 2px 4px 2px 0; border: 1px solid var(--line); border-radius: 999px; padding: 2px 8px; color: var(--muted); font-size: .73rem; white-space: nowrap; }
+    .tag.good { color: var(--green); border-color: rgba(119,220,154,.35); }
+    .tag.caution { color: var(--orange); border-color: rgba(255,179,92,.36); }
+    .score { min-width: 112px; }
+    .score-line { display: flex; gap: 3px; margin-top: 5px; }
+    .score-line i { width: 16px; height: 5px; border-radius: 2px; background: #344148; }
+    .score-line i.on { background: var(--acid); }
+    .batch-ui { display: grid; grid-template-columns: minmax(0,1fr) 310px; gap: 14px; }
+    .window { background: #0d1114; border: 1px solid var(--line); border-radius: 18px; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,.25); }
+    .window-bar { display: flex; align-items: center; gap: 7px; padding: 11px 14px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: .82rem; }
+    .window-bar i { width: 8px; height: 8px; border-radius: 50%; background: #3e4a50; }
+    .window-body { padding: 18px; }
+    .apply-row { display: grid; grid-template-columns: 26px minmax(130px,1fr) 150px 120px; gap: 10px; align-items: center; border-bottom: 1px solid #222c31; padding: 10px 0; font-size: .86rem; }
+    .check { width: 17px; height: 17px; border: 1px solid #58656a; border-radius: 4px; display: grid; place-items: center; color: #06100b; }
+    .check.on { background: var(--acid); border-color: var(--acid); }
+    .status-good { color: var(--green); }
+    .status-warn { color: var(--orange); }
+    .primary-bar { display: flex; flex-wrap: wrap; gap: 9px; align-items: center; margin-bottom: 15px; padding: 11px; background: var(--panel-2); border-radius: 11px; }
+    .primary-badge { color: #081014; background: var(--cyan); padding: 3px 8px; border-radius: 6px; font-weight: 800; font-size: .72rem; }
+    .queue-item { padding: 16px 0; border-bottom: 1px solid var(--line); }
+    .queue-title { display: flex; justify-content: space-between; gap: 12px; font-weight: 700; }
+    .progress { height: 7px; background: #273238; border-radius: 99px; overflow: hidden; margin: 10px 0; }
+    .progress span { display: block; width: 63%; height: 100%; background: linear-gradient(90deg, var(--cyan), var(--acid)); }
+    .queue-meta { color: var(--muted); font-size: .8rem; }
+    .mode-note { min-height: 68px; color: var(--muted); }
+    .memory-chart { display: grid; gap: 13px; margin-top: 17px; }
+    .memory-row { display: grid; grid-template-columns: 68px minmax(0,1fr) 70px; gap: 10px; align-items: center; }
+    .memory-bar { height: 18px; background: #202a2f; border-radius: 5px; overflow: hidden; }
+    .memory-bar span { display: block; height: 100%; width: var(--w); background: linear-gradient(90deg, var(--violet), var(--cyan)); }
+    .pipeline { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin: 20px 0; }
+    .pipeline.five { grid-template-columns: repeat(5, 1fr); }
+    .stage { position: relative; min-height: 94px; padding: 12px; border: 1px solid var(--line); background: var(--panel); border-radius: 12px; }
+    .stage:not(:last-child)::after { content: "→"; position: absolute; top: 34%; right: -9px; z-index: 2; color: var(--faint); }
+    .stage b { display: block; color: var(--acid); font-size: .76rem; text-transform: uppercase; letter-spacing: .07em; }
+    .stage span { display: block; color: var(--muted); font-size: .79rem; margin-top: 6px; line-height: 1.35; }
+    .upscale-ui { display: grid; grid-template-columns: minmax(0,1.35fr) minmax(290px,.65fr); gap: 14px; }
+    .crop-canvas { min-height: 420px; position: relative; overflow: hidden; background: #171c20; }
+    .crop-canvas img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; filter: saturate(.94); }
+    .crop-box {
+      position: absolute; left: 30%; top: 17%; width: 43%; height: 64%;
+      border: 2px solid var(--acid); box-shadow: 0 0 0 999px rgba(0,0,0,.52);
+      background-image:
+        linear-gradient(90deg, transparent 33.1%, rgba(255,255,255,.34) 33.2%, rgba(255,255,255,.34) 33.45%, transparent 33.55%, transparent 66.4%, rgba(255,255,255,.34) 66.5%, rgba(255,255,255,.34) 66.75%, transparent 66.85%),
+        linear-gradient(0deg, transparent 33.1%, rgba(255,255,255,.34) 33.2%, rgba(255,255,255,.34) 33.45%, transparent 33.55%, transparent 66.4%, rgba(255,255,255,.34) 66.5%, rgba(255,255,255,.34) 66.75%, transparent 66.85%);
+    }
+    .estimate { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin: 14px 0; }
+    .estimate div { background: var(--panel-2); border-radius: 10px; padding: 10px; }
+    .estimate b { color: var(--acid); display: block; font-size: 1.2rem; }
+    .estimate span { color: var(--faint); font-size: .72rem; text-transform: uppercase; }
+    .scale-buttons { display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; margin: 10px 0 16px; }
+    .scale-buttons button { border: 1px solid var(--line); background: var(--panel-2); color: var(--muted); border-radius: 8px; padding: 8px; cursor: pointer; }
+    .scale-buttons button.active { background: var(--acid); color: #09100d; border-color: var(--acid); font-weight: 800; }
+    .roadmap { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; counter-reset: phase; }
+    .phase { counter-increment: phase; padding: 19px; border: 1px solid var(--line); border-radius: 16px; background: var(--panel); }
+    .phase::before { content: "0" counter(phase); display: block; color: var(--cyan); font-weight: 850; margin-bottom: 12px; }
+    .phase ul { padding-left: 18px; color: var(--muted); font-size: .88rem; }
+    .phase li { margin: 5px 0; }
+    .architecture { display: grid; grid-template-columns: 1fr 1.25fr 1fr; gap: 10px; align-items: stretch; }
+    .arch-column { padding: 17px; border: 1px solid var(--line); border-radius: 15px; background: var(--panel); }
+    .arch-column h3 { color: var(--acid); }
+    .arch-node { padding: 9px 10px; margin-top: 8px; background: var(--panel-3); border-radius: 8px; color: var(--muted); font-size: .84rem; }
+    .sources { columns: 2; column-gap: 34px; padding-left: 20px; }
+    .sources li { break-inside: avoid; color: var(--muted); margin: 0 0 10px; padding-left: 4px; }
+    .sources small { color: var(--faint); }
+    .answer-banner { display: grid; grid-template-columns: 190px minmax(0,1fr); gap: 18px; align-items: center; padding: 22px; margin-bottom: 18px; border: 1px solid rgba(201,245,106,.38); border-radius: 18px; background: linear-gradient(110deg, rgba(201,245,106,.10), rgba(98,220,229,.035)); }
+    .answer-banner .answer { color: var(--acid); font-size: clamp(2rem,5vw,3.5rem); line-height: .9; font-weight: 860; letter-spacing: -.06em; }
+    .answer-banner p { color: var(--muted); margin: 0; }
+    .edge-lab { display: grid; grid-template-columns: minmax(0,1.2fr) minmax(270px,.8fr); gap: 14px; margin: 18px 0; }
+    .edge-diagram { min-height: 255px; border: 1px solid var(--line); border-radius: 16px; padding: 15px; background: #0c1114; }
+    .edge-diagram svg { width: 100%; height: 220px; display: block; }
+    .gate-list { display: grid; gap: 9px; }
+    .gate { display: grid; grid-template-columns: 116px minmax(0,1fr); gap: 10px; align-items: start; padding: 10px 12px; border-radius: 10px; background: var(--panel-2); font-size: .82rem; }
+    .gate b { color: var(--cyan); }
+    .gate span { color: var(--muted); }
+    .flow-caption { margin: -8px 0 16px; color: var(--faint); font-size: .78rem; }
+    .confidence { display: inline-flex; align-items: center; gap: 7px; color: var(--muted); font-size: .78rem; }
+    .confidence::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
+    .confidence.review::before { background: var(--orange); }
+    footer { border-top: 1px solid var(--line); color: var(--faint); padding: 26px 0 50px; }
+    @media (max-width: 940px) {
+      .grid.three, .roadmap { grid-template-columns: repeat(2,1fr); }
+      .section-head, .demo, .batch-ui, .upscale-ui { grid-template-columns: 1fr; }
+      .canvas { min-height: 460px; }
+      .pipeline, .pipeline.five { grid-template-columns: repeat(3,1fr); }
+      .architecture { grid-template-columns: 1fr; }
+      .answer-banner, .edge-lab { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 650px) {
+      .shell { width: min(100% - 24px, var(--max)); }
+      .topbar .shell { align-items: flex-start; padding: 11px 0; }
+      nav { max-width: 68vw; }
+      header { padding-top: 52px; }
+      .grid.three, .grid.two, .decision-strip, .roadmap, .estimate { grid-template-columns: 1fr; }
+      .decision:not(:last-child)::after { display: none; }
+      .canvas { min-height: 360px; }
+      .apply-row { grid-template-columns: 24px minmax(100px,1fr) 115px; }
+      .apply-row > :last-child { display: none; }
+      .pipeline, .pipeline.five { grid-template-columns: 1fr 1fr; }
+      .stage::after { display: none; }
+      .sources { columns: 1; }
+      h1 { font-size: 3.25rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="shell">
+      <div class="brand"><span class="brand-mark" aria-hidden="true"></span> ShopPhoto Lab</div>
+      <nav aria-label="Research sections">
+        <a href="#decision">Decision</a><a href="#masking">Masking</a><a href="#batch">Batch</a><a href="#upscale">Upscale</a><a href="#architecture">Architecture</a><a href="#roadmap">Roadmap</a><a href="#sources">Sources</a>
+      </nav>
+    </div>
+  </div>
+
+  <header class="shell">
+    <div class="eyebrow">Advanced imaging research · 4 September 2026</div>
+    <h1>Select locally.<br>Scale intelligently.</h1>
+    <p class="lede">A practical plan for AI object, sky, subject and depth masks; adaptive edits across hundreds of photographs; and faithful on-device upscaling that builds on ShopPhoto’s existing RAW denoise and scene-linear GPU pipeline.</p>
+    <div class="meta">
+      <span class="pill"><span class="dot"></span> On-device first</span>
+      <span class="pill">3 feature tracks</span>
+      <span class="pill">30+ primary sources</span>
+      <span class="pill">Rust · Core ML · ONNX · WinML</span>
+    </div>
+  </header>
+
+  <main class="shell">
+    <section id="decision">
+      <div class="section-head">
+        <div><div class="kicker">Executive decision</div><h2>One shared analysis and job layer.</h2></div>
+        <p>ShopPhoto already has tiled neural RAW denoise, recoverable sidecar sync, background export and a scene-linear <code>rgba16float</code> pipeline. Extend those foundations instead of introducing three unrelated subsystems.</p>
+      </div>
+      <div class="grid three">
+        <article class="card verdict"><div class="verdict-label">Masking quality bar</div><div class="metric">2 passes</div><h3>Select, then matte at full resolution</h3><p>Light HQ-SAM finds the region; a compact, commercially cleared alpha-matte head refines only the boundary band. Apple Vision is a useful native accelerator, not the quality contract.</p></article>
+        <article class="card verdict"><div class="verdict-label">Batch workflow</div><div class="metric">Auto Finish</div><h3>Precompute each image, then inspect</h3><p>Run ShopPhoto’s Auto logic per file in advance, stabilize bursts, persist the results to sidecars and refresh thumbnails. Preview and export then require no new Auto analysis.</p></article>
+        <article class="card verdict"><div class="verdict-label">Upscale quality tier</div><div class="metric">DRCT-L</div><h3>Maximum fidelity without diffusion</h3><p>Use a tiled DRCT-L ×2 model for clean, denoised photographs. It has 27.58M parameters—materially smaller than a diffusion stack—and leads the compact fidelity options researched here.</p></article>
+      </div>
+      <div class="decision-strip" aria-label="Recommended data flow">
+        <div class="decision"><b>Analyze</b>Proxy image, model hash, reusable embeddings</div>
+        <div class="decision"><b>Describe</b>Mask recipes and adjustment semantics in sidecars</div>
+        <div class="decision"><b>Schedule</b>Resource-aware queue with cancellation and recovery</div>
+        <div class="decision"><b>Render</b>Scene-linear edits, crop halo, tiled upscale, output sharpen</div>
+      </div>
+      <div class="callout warn" style="margin-top:18px"><strong>Non-negotiable:</strong> audit model weights separately from repository code. Several attractive checkpoints are non-commercial or have unclear redistribution provenance even when their inference code is permissively licensed.</div>
+    </section>
+
+    <section id="masking">
+      <div class="section-head">
+        <div><div class="kicker">Feature 01 · AI masking</div><h2>Near-pixel-perfect, never blindly promised.</h2></div>
+        <p>A better foundation model alone will not satisfy this quality bar. Production masking needs semantic selection, full-resolution boundary matting, edge-aware cleanup and a fast human repair loop.</p>
+      </div>
+
+      <div class="answer-banner">
+        <div class="answer">Yes—<br>with a caveat.</div>
+        <p><strong>Pixel-level professional masks are achievable on most photographs, but no automatic model can guarantee a perfect result on every hair, reflection, transparent veil, motion-blurred edge or ambiguous object.</strong> ShopPhoto should promise a high-quality starting matte plus precise, non-destructive correction—not an infallible one-click cutout.</p>
+      </div>
+
+      <div class="demo" id="maskDemo" data-mask="sky">
+        <div class="canvas">
+          <img src="advanced-ai-features/ai-mask-scene.png" alt="Outdoor scene used to illustrate semantic and depth masking">
+          <div class="mask-layer mask-sky"></div><div class="mask-layer mask-subject"></div><div class="mask-layer mask-object"></div><div class="mask-layer mask-depth"></div><div class="crosshair" aria-hidden="true"></div>
+        </div>
+        <div class="demo-panel">
+          <div class="label">Selection-intent mockup</div>
+          <h3 style="font-size:1.35rem;margin-top:5px">Masks</h3>
+          <div class="tabs" aria-label="Mask preview type">
+            <button class="tab" data-mask="sky" aria-pressed="true">Sky</button><button class="tab" data-mask="subject" aria-pressed="false">Subject</button><button class="tab" data-mask="object" aria-pressed="false">Object</button><button class="tab" data-mask="depth" aria-pressed="false">Depth</button>
+          </div>
+          <div class="mask-row"><span class="mask-swatch"></span><strong id="maskTitle">Sky · Cool highlights</strong><span style="margin-left:auto;color:var(--green)">ready</span></div>
+          <div class="slider"><label><span>Exposure</span><b>−0.40 EV</b></label><div class="track" style="--fill:38%"></div></div>
+          <div class="slider"><label><span>Temperature</span><b>−12</b></label><div class="track" style="--fill:44%"></div></div>
+          <div class="slider"><label><span>Feather</span><b>18</b></label><div class="track" style="--fill:58%"></div></div>
+          <p class="fineprint"><strong>This colored overlay is deliberately schematic, not a mask-quality sample.</strong> It demonstrates the interaction only. The acceptance target below is defined at original-image resolution.</p>
+        </div>
+      </div>
+
+      <div class="pipeline five" aria-label="Pixel-level mask refinement pipeline">
+        <div class="stage"><b>01 · Select</b><span>Prompt, subject, sky or object on a 1024 px analysis proxy</span></div>
+        <div class="stage"><b>02 · Find edge</b><span>Project probabilities to the original and isolate only the uncertain boundary band</span></div>
+        <div class="stage"><b>03 · Matte</b><span>Run overlapping full-resolution tiles to estimate continuous alpha</span></div>
+        <div class="stage"><b>04 · Refine</b><span>Guided edge alignment, decontamination and halo-safe feathering</span></div>
+        <div class="stage"><b>05 · Repair</b><span>Add/subtract clicks or brush strokes retained above the regenerable AI base</span></div>
+      </div>
+      <p class="flow-caption">The costly model only touches a narrow band around the edge; certain foreground and background remain unchanged. That makes 50–100 MP files practical without pretending a 1024 px mask contains 100 MP of boundary information.</p>
+
+      <div class="edge-lab">
+        <div class="edge-diagram">
+          <div class="label" style="color:var(--faint);text-transform:uppercase;font-size:.72rem">Boundary refinement concept · magnified</div>
+          <svg viewBox="0 0 720 220" role="img" aria-label="Diagram comparing a coarse proxy edge to a refined full-resolution alpha edge">
+            <defs><pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse"><path d="M 20 0 L 0 0 0 20" fill="none" stroke="#263239" stroke-width="1"/></pattern><linearGradient id="alpha" x1="0" x2="1"><stop offset="0" stop-color="#62dce5" stop-opacity=".08"/><stop offset=".48" stop-color="#62dce5" stop-opacity=".92"/><stop offset="1" stop-color="#c9f56a" stop-opacity=".20"/></linearGradient></defs>
+            <rect x="0" y="0" width="720" height="220" rx="12" fill="url(#grid)"/>
+            <path d="M80 20 L80 62 L120 62 L120 102 L160 102 L160 144 L200 144 L200 200" fill="none" stroke="#ffb35c" stroke-width="11" opacity=".82"/>
+            <path d="M430 15 C389 52 469 70 421 104 C377 135 449 151 399 203" fill="none" stroke="url(#alpha)" stroke-width="54"/>
+            <path d="M430 15 C389 52 469 70 421 104 C377 135 449 151 399 203" fill="none" stroke="#eef3f2" stroke-width="2"/>
+            <path d="M422 80 C392 54 377 42 360 25 M423 104 C461 87 485 70 503 45 M410 147 C379 171 360 183 345 207" fill="none" stroke="#eef3f2" stroke-width="2" stroke-linecap="round"/>
+            <text x="34" y="210" fill="#ffb35c" font-size="15">proxy mask: stepped edge</text><text x="478" y="210" fill="#62dce5" font-size="15">full-res alpha: fine structure</text>
+          </svg>
+        </div>
+        <div class="card">
+          <h3>Release gates—not adjectives</h3>
+          <div class="gate-list">
+            <div class="gate"><b>Boundary</b><span>F-score measured in a 1–3 px band at original resolution</span></div>
+            <div class="gate"><b>Soft alpha</b><span>SAD, gradient and connectivity metrics for hair, fur, glass and smoke</span></div>
+            <div class="gate"><b>Halo torture</b><span>No fringe when the masked region is pushed ±2 EV or given an extreme color shift</span></div>
+            <div class="gate"><b>Human time</b><span>Median correction time and percentage accepted without repair</span></div>
+          </div>
+        </div>
+      </div>
+
+      <h3 style="margin-top:28px">Options worth prototyping</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Model path</th><th>Best role</th><th>Footprint / evidence</th><th>License gate</th><th>ShopPhoto fit</th></tr></thead>
+          <tbody>
+            <tr><td>Light HQ-SAM</td><td>Cross-platform promptable selector before matting</td><td>Official TinyViT table: 40.3 MB parameters, 41.2 FPS and 3.7 GB memory on the authors’ hardware</td><td><span class="tag good">Apache-2.0</span></td><td class="score">Best first benchmark<div class="score-line"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></div></td></tr>
+            <tr><td>Apple Vision instance masks</td><td>Foreground/person fast path on macOS</td><td>OS-provided model; high-resolution instance-mask generation API</td><td><span class="tag good">No bundled weight</span></td><td class="score">Apple accelerator<div class="score-line"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div></td></tr>
+            <tr><td>Compact alpha-matte head</td><td>Full-resolution hair, fur, glass and transition refinement</td><td>MAM demonstrates a 2.7M-parameter add-on with multi-scale alpha; ShopPhoto needs a separately cleared checkpoint</td><td><span class="tag caution">Train/license cleared weights</span></td><td class="score">Quality-critical<div class="score-line"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></div></td></tr>
+            <tr><td>Depth Anything V2 Small</td><td>Continuous near/far masks and depth falloff</td><td>24.8M parameters; official Apple packages 19–50 MB; ONNX available</td><td><span class="tag good">Apache-2.0 Small</span></td><td class="score">Depth MVP<div class="score-line"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></div></td></tr>
+            <tr><td>MobileSAM</td><td>Small compatibility selector</td><td>9.66M parameters; ~40 MB checkpoint; official ONNX export</td><td><span class="tag good">Apache-2.0</span></td><td class="score">Fallback, not quality ceiling<div class="score-line"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></div></td></tr>
+            <tr><td>ViTMatte / ZIM checkpoints</td><td>Research reference for fine matting</td><td>Excellent ideas, but common ViTMatte training data and ZIM’s license block commercial bundling</td><td><span class="tag caution">Do not ship common weights</span></td><td class="score">Research only<div class="score-line"><i class="on"></i><i></i><i></i><i></i><i></i></div></td></tr>
+            <tr><td>Grounding DINO + SAM</td><td>Future text prompts such as “red car”</td><td>Flexible but heavy two-model pipeline</td><td><span class="tag good">Apache-2.0 core</span></td><td class="score">Later option<div class="score-line"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="grid three" style="margin-top:14px">
+        <article class="card"><h3>A · HQ selector + matte head</h3><p>Light HQ-SAM proposes the region; a compact cleared matte head works on original-resolution edge tiles. Best balance of detail, size and parity across macOS/Windows.</p><span class="tag good">Recommended</span></article>
+        <article class="card"><h3>B · Apple Vision + matte head</h3><p>Use Vision for near-zero-download foreground/person masks, then the same ShopPhoto refiner and repair stack. Very attractive on macOS, but requires a Windows selector.</p><span class="tag">Native Apple path</span></article>
+        <article class="card"><h3>C · Larger SAM foundation</h3><p>SAM 2.1/HQ-SAM 2 may improve the starting region, but still does not replace alpha matting or repair. Offer only if corpus testing justifies the larger download.</p><span class="tag caution">Optional quality pack</span></article>
+      </div>
+      <div class="callout" style="margin-top:16px"><strong>Mask document:</strong> store detector type, model/version, prompts or depth range, normalized geometry, add/subtract strokes, feather/expand operations and cache key. The full-resolution alpha raster is a disposable cache; the recipe and repair history are the source of truth.</div>
+    </section>
+
+    <section id="batch">
+      <div class="section-head">
+        <div><div class="kicker">Feature 02 · Batch adjustments</div><h2>Precompute Auto Finish. Inspect at preview speed.</h2></div>
+        <p>Your proposed workflow is the right one: resolve the automatic result for every selected file ahead of time, persist it, refresh the previews, review exceptions and only then send the approved set to batch export.</p>
+      </div>
+      <div class="callout"><strong>Direct recommendation:</strong> turn the existing Auto profile into a deterministic, versioned <em>Auto Finish</em> recipe. It should analyze each image independently with the chosen base profile and look active, then save ordinary edit values. Once precomputed, opening a photo is as fast as opening any already-edited file—there is no Auto inference in the inspection path.</div>
+
+      <div class="pipeline" aria-label="Auto Finish batch workflow">
+        <div class="stage"><b>01 · Choose</b><span>Base camera/profile, lens resolution and creative look</span></div>
+        <div class="stage"><b>02 · Analyze</b><span>Hidden neutral-tone proxy for every selected RAW</span></div>
+        <div class="stage"><b>03 · Adapt</b><span>Per-image tone, optional WB and ISO-aware denoise</span></div>
+        <div class="stage"><b>04 · Stabilize</b><span>Burst/sequence anchors prevent exposure or color flicker</span></div>
+        <div class="stage"><b>05 · Persist</b><span>Write versioned values to .spedit and refresh thumbnails</span></div>
+        <div class="stage"><b>06 · Review</b><span>Contact sheet, flagged exceptions, then batch export</span></div>
+      </div>
+      <div class="tabs" aria-label="Batch semantics">
+        <button class="mode-button" data-mode="exact" aria-pressed="true">Exact sync</button><button class="mode-button" data-mode="relative" aria-pressed="false">Relative sync</button><button class="mode-button" data-mode="adaptive" aria-pressed="false">Adaptive sync</button>
+      </div>
+      <p class="mode-note" id="modeNote"><strong>Exact sync</strong> replaces selected target values—ideal for a curve, HSL, grading or a shared creative look. Auto Finish itself uses adaptive per-image analysis.</p>
+      <div class="batch-ui">
+        <div class="window" aria-label="Auto Finish precompute mockup">
+          <div class="window-bar"><i></i><i></i><i></i><span style="margin-left:8px">Precompute Auto Finish · 24 selected</span></div>
+          <div class="window-body">
+            <div class="primary-bar"><span class="primary-badge">RECIPE</span><strong>Natural Balanced · Auto v2</strong><span style="color:var(--muted)">24 photographs</span></div>
+            <div class="apply-row" style="color:var(--faint);font-size:.72rem;text-transform:uppercase"><span></span><span>Operation</span><span>Semantics</span><span>Preflight</span></div>
+            <div class="apply-row"><span class="check on">✓</span><span>Camera/base profile</span><span>Resolve target</span><span class="status-good">24 compatible</span></div>
+            <div class="apply-row"><span class="check on">✓</span><span>Creative look</span><span>Exact</span><span class="status-good">24 ready</span></div>
+            <div class="apply-row"><span class="check on">✓</span><span>Auto tone</span><span>Recompute per file</span><span class="status-good">24 analyze</span></div>
+            <div class="apply-row"><span class="check on">✓</span><span>Denoise</span><span>ISO adaptive</span><span class="status-warn">7 neural · 17 light</span></div>
+            <div class="apply-row"><span class="check"></span><span>Auto white balance</span><span>Confidence gated</span><span>Off until audited</span></div>
+            <div class="apply-row"><span class="check"></span><span>Crop &amp; straighten</span><span>Per-image</span><span>Never implicit</span></div>
+            <div style="display:flex;justify-content:space-between;gap:10px;align-items:center;margin-top:18px"><span class="fineprint">Representative frames and low-confidence results are flagged</span><button class="tab" style="background:var(--acid);color:#081014;border-color:var(--acid);font-weight:800">Precompute 24</button></div>
+          </div>
+        </div>
+        <aside class="window" aria-label="Auto Finish job mockup">
+          <div class="window-bar">Auto Finish status <span style="margin-left:auto">Background</span></div>
+          <div class="window-body">
+            <div class="queue-item"><div class="queue-title"><span>Natural Balanced</span><span>63%</span></div><div class="progress"><span></span></div><div class="queue-meta">15 / 24 · analyzing DSC_1857.3FR<br>Proxy analysis; exports remain untouched</div></div>
+            <div class="queue-item"><div class="queue-title"><span>Already inspectable</span><span class="status-good">15</span></div><div class="queue-meta">Sidecars committed and grid previews refreshed as each item completes</div></div>
+            <div class="queue-item" style="border:0"><div class="queue-title"><span>Needs review</span><span class="status-warn">2</span></div><div class="queue-meta"><span class="confidence review">mixed light</span><br><span class="confidence review">backlit face</span></div></div>
+          </div>
+        </aside>
+      </div>
+      <div class="grid two" style="margin-top:18px">
+        <article class="card"><h3>Reuse what ShopPhoto already does correctly</h3><p>Current Auto Balance neutralizes tone for a hidden analysis render while keeping the profile/look context, waits for its exact asynchronous histogram, retries if the edit changes, applies a single undo step and marks the sidecar dirty. Batch should call the same pure Auto function and preserve those invariants.</p></article>
+        <article class="card"><h3>Do not copy the source result</h3><p>The existing sync mechanism remains valuable for creative intent, but global Auto exposure/brightness/endpoints must be recomputed for every image. Persist algorithm version, input edit revision, confidence and final values so previews are deterministic and future Auto updates do not silently change old work.</p></article>
+      </div>
+      <h3 style="margin-top:28px">How to perfect the current Auto profile</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Layer</th><th>What exists</th><th>Upgrade</th><th>Why it matters</th></tr></thead>
+          <tbody>
+            <tr><td>Global tone</td><td>Robust luminance percentiles, HDR-tail awareness and conservative bounds</td><td>Keep as the deterministic fallback</td><td>Already protects deliberate low/high-key scenes better than a naive mid-grey target</td></tr>
+            <tr><td>Spatial understanding</td><td>One global distribution</td><td>Add grid percentiles, highlight-area ratio and local contrast</td><td>Separates “bright sky over dark subject” from a uniformly dark photograph</td></tr>
+            <tr><td>Important subject</td><td>No subject weighting</td><td>Optional face/subject exposure target, only above a confidence threshold</td><td>Backlit people and products should not be sacrificed to the background histogram</td></tr>
+            <tr><td>Series stability</td><td>Each image stands alone</td><td>Group bursts by capture metadata/content; regularize against an anchor or robust median</td><td>Prevents visible brightness or WB flicker across near-identical frames</td></tr>
+            <tr><td>Validation</td><td>Synthetic histogram and real-file checks</td><td>Licensed scene corpus, pair consistency and blind human acceptance tests</td><td>Optimizes for finished photographs, not only plausible histogram statistics</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout warn" style="margin-top:16px"><strong>Scope discipline:</strong> include white balance only after neutral/skin confidence is proven; make denoise strength ISO- and camera-aware; never auto-crop in this recipe. Low-confidence cases should be review items, not silently aggressive edits.</div>
+      <h3 style="margin-top:28px">Memory—not core count—sets safe parallelism</h3>
+      <div class="card">
+        <div class="memory-chart" aria-label="RGBA16F surface memory chart">
+          <div class="memory-row"><b>25 MP</b><div class="memory-bar"><span style="--w:17%"></span></div><span>200 MB</span></div>
+          <div class="memory-row"><b>50 MP</b><div class="memory-bar"><span style="--w:33%"></span></div><span>400 MB</span></div>
+          <div class="memory-row"><b>100 MP</b><div class="memory-bar"><span style="--w:67%"></span></div><span>800 MB</span></div>
+          <div class="memory-row"><b>150 MP</b><div class="memory-bar"><span style="--w:100%"></span></div><span>1.2 GB</span></div>
+        </div>
+        <p class="fineprint">One RGBA16F surface only. Four 100 MP surfaces already consume ~3.2 GB, before RAW data, masks, model workspace, readback and encoding.</p>
+      </div>
+    </section>
+
+    <section id="upscale">
+      <div class="section-head">
+        <div><div class="kicker">Feature 03 · AI upscale</div><h2>Maximum fidelity without diffusion.</h2></div>
+        <p>For a clean, denoised RAW crop, DRCT-L ×2 is the best quality-first candidate found here. It is a 27.58M-parameter transformer, not a multi-billion-parameter diffusion system, and it can run in overlapping tiles on both macOS and Windows.</p>
+      </div>
+      <div class="answer-banner">
+        <div class="answer">DRCT-L<br>×2</div>
+        <p><strong>Recommended flagship:</strong> a fidelity-trained ×2 model, FP16 where validated, with fixed tile shapes and overlap. The published DRCT table beats the larger HAT-L on four of five listed classical ×4 benchmarks while using 27.58M versus 40.84M parameters. A packaged FP16 weight is roughly 55 MB by parameter count; actual runtime workspace will be much larger and must be measured.</p>
+      </div>
+      <div class="pipeline" aria-label="Recommended image processing order">
+        <div class="stage"><b>01 · RAW</b><span>Decode, black level, sensor metadata</span></div>
+        <div class="stage"><b>02 · Clean</b><span>Run the AI RAW denoise first and cache its result</span></div>
+        <div class="stage"><b>03 · Develop</b><span>Demosaic, lens, CA and scene-linear color</span></div>
+        <div class="stage"><b>04 · Select</b><span>Local adjustments and crop with context halo</span></div>
+        <div class="stage"><b>05 · Upscale</b><span>Perceptual model bridge, overlapping FP16 tiles, trim halo</span></div>
+        <div class="stage"><b>06 · Finish</b><span>Final dimensions, one output sharpen, encode</span></div>
+      </div>
+      <div class="upscale-ui">
+        <div class="window">
+          <div class="window-bar">Current crop · context halo preview</div>
+          <div class="crop-canvas"><img src="advanced-ai-features/ai-mask-scene.png" alt="Scene with a crop region selected for upscale"><div class="crop-box"></div></div>
+        </div>
+        <div class="window">
+          <div class="window-bar">Enhance &amp; Upscale</div>
+          <div class="window-body">
+            <div class="label" style="color:var(--faint);text-transform:uppercase;font-size:.72rem">Process</div>
+            <p><strong>Current crop</strong> <span style="color:var(--faint)">· Whole image</span></p>
+            <div class="label" style="color:var(--faint);text-transform:uppercase;font-size:.72rem">Output scale</div>
+            <div class="scale-buttons"><button data-scale="1">Native</button><button class="active" data-scale="2">2×</button><button data-scale="4">4×</button></div>
+            <div class="estimate"><div><b id="mpValue">96 MP</b><span>output</span></div><div><b id="pixelValue">4×</b><span>pixels</span></div><div><b id="surfaceValue">768 MB</b><span>one f16 surface</span></div></div>
+            <div class="slider"><label><span>Quality mode</span><b>Maximum Fidelity</b></label><div class="track" style="--fill:24%"></div></div>
+            <div class="slider"><label><span>Input state</span><b>Denoised RAW</b></label><div class="track" style="--fill:40%"></div></div>
+            <div class="callout warn" style="font-size:.82rem;padding:11px 12px">Even non-diffusion GAN variants can invent texture. Maximum Fidelity should use the distortion-trained model and protect text, faces and product markings with residual/confidence limits.</div>
+            <p class="fineprint">Interaction mockup; estimates assume a 24 MP crop and one 8-byte-per-pixel RGBA16F surface.</p>
+          </div>
+        </div>
+      </div>
+      <h3 style="margin-top:28px">Model options</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Family</th><th>Product label</th><th>Best input</th><th>Footprint</th><th>Decision</th></tr></thead>
+          <tbody>
+            <tr><td>DRCT-L ×2</td><td>Maximum Fidelity</td><td>Clean, already-denoised RAW crops and full images</td><td>27.58M params; ~55 MB FP16 estimate</td><td><span class="tag good">Flagship candidate</span></td></tr>
+            <tr><td>DRCT ×2</td><td>Fidelity · Compact</td><td>Same clean-photo path on tighter hardware</td><td>14.13M params; ~28 MB FP16 estimate</td><td><span class="tag good">Smaller quality option</span></td></tr>
+            <tr><td>HAT-L / HAT</td><td>Faithful Alternative</td><td>Strong classical SR and conversion fallback</td><td>40.84M / 20.77M params</td><td><span class="tag">Benchmark against DRCT</span></td></tr>
+            <tr><td>Real-HAT-GAN</td><td>Natural · Degraded</td><td>JPEGs, scans and real-world blur/noise after user approval</td><td>Transformer/GAN quality pack</td><td><span class="tag caution">May synthesize texture</span></td></tr>
+            <tr><td>SwinIR-M ×2</td><td>Compatibility Fidelity</td><td>Clean photos where DRCT operators/backend fail qualification</td><td>~12M-param class</td><td><span class="tag">Mature fallback</span></td></tr>
+            <tr><td>Real-ESRGAN compact</td><td>Fast Upscale</td><td>Speed, previews and lower-end devices</td><td>~4.7 MB compact weight</td><td><span class="tag">Fast mode, not best mode</span></td></tr>
+            <tr><td>Diffusion / generative SR</td><td>Creative Detail</td><td>Explicit creative reconstruction</td><td>large</td><td><span class="tag caution">Never the default</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="grid three" style="margin-top:14px">
+        <article class="card"><h3>A · Shared ONNX Runtime core</h3><p>Export one qualified graph with fixed tile shapes. Use the Core ML execution provider on macOS and Windows ML execution providers on Windows; fall back per-node or per-model only after measuring graph partitioning.</p><span class="tag good">Recommended architecture</span></article>
+        <article class="card"><h3>B · Native accelerators</h3><p>A direct Core ML conversion can be the Apple fast path if ONNX partitioning falls back too heavily. NVIDIA systems may opt into CUDA/TensorRT. Keep preprocessing and output parity identical.</p><span class="tag">Optional optimized paths</span></article>
+        <article class="card"><h3>C · ncnn/Vulkan fast tier</h3><p>Retain compact Real-ESRGAN for broad, small-download acceleration. Do not make it the flagship until DRCT/HAT output parity and conversion are proven impossible on a target.</p><span class="tag">Compatibility / speed</span></article>
+      </div>
+      <h3 style="margin-top:28px">HDR compatibility: preserve HDR, do not pretend the model is HDR-native</h3>
+      <p>Public DRCT, HAT and SwinIR checkpoints are trained on ordinary display-encoded image datasets. The safe inference is that they are <strong>not natively scene-linear Rec.2020/PQ models</strong>. ShopPhoto can still make the feature HDR-compatible by keeping the original HDR master authoritative and borrowing only bounded high-frequency detail from an SDR/perceptual guide.</p>
+      <div class="pipeline" aria-label="HDR-preserving upscale pipeline">
+        <div class="stage"><b>01 · Master</b><span>Conventionally upscale scene-linear Rec.2020, preserving values above 1.0</span></div>
+        <div class="stage"><b>02 · Guide</b><span>Create a reversible perceptual/tone-mapped model input</span></div>
+        <div class="stage"><b>03 · Detail</b><span>Run tiled DRCT-L and subtract a conventional guide upscale</span></div>
+        <div class="stage"><b>04 · Limit</b><span>Confidence-gate luminance residual near speculars, saturated edges, text and faces</span></div>
+        <div class="stage"><b>05 · Reapply</b><span>Add/multiply detail into HDR luminance while preserving master chroma and headroom</span></div>
+        <div class="stage"><b>06 · Export</b><span>Existing PQ / Ultra HDR / JXL / AVIF path and one final sharpen</span></div>
+      </div>
+      <div class="callout warn" style="margin-top:16px"><strong>Ship claim:</strong> call this <em>HDR-preserving upscale</em>, not “native HDR AI.” Gate release on ΔE00/hue drift, peak-luminance monotonicity, no highlight clipping, gain-map consistency and visual tests on saturated LED/specular edges. Keep direct full-RGB model replacement SDR-only until those tests pass.</div>
+    </section>
+
+    <section id="architecture">
+      <div class="section-head">
+        <div><div class="kicker">Shared architecture</div><h2>Intent survives; caches expire.</h2></div>
+        <p>Sidecars should own reproducible recipes. Embeddings, masks, depth maps and enhanced pixels are derivatives keyed by source content, geometry, upstream edit state, model ID and preprocessing version.</p>
+      </div>
+      <div class="architecture">
+        <div class="arch-column"><h3>Analysis</h3><div class="arch-node">512–1024 px semantic / Auto proxy</div><div class="arch-node">Cached prompt encoder embedding</div><div class="arch-node">Original-resolution boundary tiles + alpha</div><div class="arch-node">Spatial tone stats, confidence and 16-bit depth</div></div>
+        <div class="arch-column"><h3>Recipe + scheduler</h3><div class="arch-node"><strong>MaskRecipe</strong> · detector, prompt, range, matte, Boolean ops, repair strokes</div><div class="arch-node"><strong>AutoFinishRecipe</strong> · base/look, Auto version, optional WB/denoise policies</div><div class="arch-node"><strong>DurableJob</strong> · selection snapshot, edit revisions, attempts, warnings, model hash</div><div class="arch-node"><strong>Memory permits</strong> · interactive preview &gt; mask repair &gt; Auto analysis &gt; export / upscale</div></div>
+        <div class="arch-column"><h3>Render</h3><div class="arch-node">16-bit single-channel alpha texture</div><div class="arch-node">Scene-linear local adjustment mix</div><div class="arch-node">Crop + model-specific context halo</div><div class="arch-node">Tiled SR or HDR detail-residual merge + atomic finalize</div></div>
+      </div>
+      <div class="grid two" style="margin-top:14px">
+        <article class="card"><h3>Cache invalidation</h3><p>Orientation, lens geometry or source content changes invalidate analysis. Ordinary color edits should not. Manual repair operations replay on top of a regenerated AI base mask.</p></article>
+        <article class="card"><h3>Output safety</h3><p>Encode into a unique temporary file in the destination directory, close it, then atomically rename. Retry failed items without redoing completed work; record source, recipe and model revisions.</p></article>
+      </div>
+    </section>
+
+    <section id="roadmap">
+      <div class="section-head"><div><div class="kicker">Delivery plan</div><h2>Ship the architecture in slices.</h2></div><p>Each phase is independently useful and validates the riskiest assumptions before the next layer adds weight or complexity.</p></div>
+      <div class="roadmap">
+        <article class="phase"><h3>Corpus &amp; contracts</h3><ul><li><code>AnalysisBackend</code>, matting and restoration traits</li><li>Licensed edge/HDR/scene/burst corpus</li><li>Model, data and preprocessing manifests</li><li>Boundary, Auto acceptance, color, seam and latency benchmarks</li></ul></article>
+        <article class="phase"><h3>Auto Finish first</h3><ul><li>Reuse neutral-tone Auto analysis per target</li><li>Versioned result/confidence in sidecars</li><li>Thumbnail invalidation and representative review</li><li>Burst stabilization, then optional WB/denoise policies</li></ul></article>
+        <article class="phase"><h3>Production masks</h3><ul><li>Light HQ-SAM and Apple Vision benchmarks</li><li>Cleared compact alpha-matte head</li><li>Full-res boundary tiles, repair and Boolean ops</li><li>Depth Anything V2 Small</li></ul></article>
+        <article class="phase"><h3>Maximum-fidelity upscale</h3><ul><li>DRCT-L ×2 ONNX conversion and parity tests</li><li>Core ML / Windows ML qualification</li><li>Crop halo, tile seams and memory autotuning</li><li>HDR-preserving detail-residual validation</li></ul></article>
+      </div>
+      <div class="callout" style="margin-top:16px"><strong>Acceptance gates:</strong> original-resolution mask edge/alpha metrics plus halo tests; no visible SR tile seams; average color-target drift below ΔE00 1; no default-mode corruption of readable text; burst Auto results without visible flicker; cancellation between tiles under 500 ms; graceful out-of-memory tile reduction; and exact algorithm/model/license/preprocessing revision recorded with every result.</div>
+    </section>
+
+    <section id="sources">
+      <div class="section-head"><div><div class="kicker">Research trail</div><h2>Primary sources.</h2></div><p>Vendor performance figures are directional only: hardware, precision, input size and compilation differ. ShopPhoto needs its own Apple Silicon, Windows GPU and CPU-fallback measurements.</p></div>
+      <ol class="sources">
+        <li><a href="https://github.com/facebookresearch/EdgeTAM">Meta EdgeTAM</a> <small>· Core ML modules, benchmarks, license</small></li>
+        <li><a href="https://github.com/ChaoningZhang/MobileSAM">MobileSAM</a> <small>· compact promptable masks, ONNX</small></li>
+        <li><a href="https://github.com/yformer/EfficientSAM">EfficientSAM</a> <small>· compact alternative, split ONNX</small></li>
+        <li><a href="https://github.com/facebookresearch/sam2">Meta SAM 2 / 2.1</a> <small>· checkpoints, parameters, Apache-2.0</small></li>
+        <li><a href="https://github.com/SysCV/SAM-HQ">HQ-SAM</a> <small>· boundary-quality option</small></li>
+        <li><a href="https://github.com/SHI-Labs/Matting-Anything">Matting Anything</a> <small>· 2.7M M2M alpha-refinement concept</small></li>
+        <li><a href="https://developer.apple.com/documentation/vision/vngenerateforegroundinstancemaskrequest">Apple Vision foreground instance masks</a> <small>· native object separation</small></li>
+        <li><a href="https://developer.apple.com/documentation/vision/vninstancemaskobservation/generatemask(forinstances:)">Apple Vision high-resolution instance mask</a> <small>· original-resolution generation API</small></li>
+        <li><a href="https://github.com/naver-ai/ZIM">ZIM</a> <small>· fine-matting research; CC-BY-NC checkpoint/code gate</small></li>
+        <li><a href="https://github.com/IDEA-Research/GroundingDINO">Grounding DINO</a> <small>· open-vocabulary detection</small></li>
+        <li><a href="https://github.com/ZhengPeng7/BiRefNet">BiRefNet</a> <small>· subject / matting model zoo</small></li>
+        <li><a href="https://github.com/ZHKKKe/MODNet">MODNet</a> <small>· portrait matting</small></li>
+        <li><a href="https://github.com/PaddlePaddle/PaddleSeg">PaddleSeg / PP-LiteSeg</a> <small>· semantic sky prototype</small></li>
+        <li><a href="https://github.com/DepthAnything/Depth-Anything-V2">Depth Anything V2</a> <small>· size and per-variant licenses</small></li>
+        <li><a href="https://developer.apple.com/machine-learning/models/">Apple Core ML models</a> <small>· official DA-V2 Small packages</small></li>
+        <li><a href="https://helpx.adobe.com/lightroom/desktop/edit-photos/masking.html">Adobe Lightroom masking</a> <small>· subject, sky, object and local adjustments</small></li>
+        <li><a href="https://helpx.adobe.com/lightroom-classic/help/masking.html">Lightroom Classic batch AI masks</a> <small>· per-target recomputation</small></li>
+        <li><a href="https://support.captureone.com/hc/en-us/articles/14055231933853-AI-Masking">Capture One AI Masking</a> <small>· recalculated masks in styles/clipboard</small></li>
+        <li><a href="https://support.captureone.com/hc/en-us/articles/7129920998045-Smart-Adjustments">Capture One Smart Adjustments</a> <small>· reference exposure/WB matching</small></li>
+        <li><a href="https://docs.darktable.org/usermanual/development/en/module-reference/utility-modules/lighttable/history-stack/">darktable history stack</a> <small>· selective copy and safety exclusions</small></li>
+        <li><a href="https://rawpedia.rawtherapee.com/The_Batch_Queue">RawTherapee batch queue</a> <small>· persistent processing</small></li>
+        <li><a href="https://www.sqlite.org/wal.html">SQLite WAL</a> <small>· durable scheduler storage</small></li>
+        <li><a href="https://github.com/xinntao/Real-ESRGAN">Real-ESRGAN</a> <small>· model families, tiling, alpha, BSD-3</small></li>
+        <li><a href="https://github.com/xinntao/Real-ESRGAN-ncnn-vulkan">Real-ESRGAN ncnn Vulkan</a> <small>· portable local runtime</small></li>
+        <li><a href="https://github.com/Tencent/ncnn">Tencent ncnn</a> <small>· CPU/Vulkan inference</small></li>
+        <li><a href="https://github.com/JingyunLiang/SwinIR">SwinIR</a> <small>· fidelity/real-world SR, Apache-2.0</small></li>
+        <li><a href="https://github.com/XPixelGroup/HAT">HAT</a> <small>· quality tier and tiled testing</small></li>
+        <li><a href="https://github.com/ming053l/DRCT">DRCT</a> <small>· parameters, ×2/×4 weights and benchmark table</small></li>
+        <li><a href="https://github.com/megvii-research/NAFNet">NAFNet</a> <small>· denoise/deblur reference</small></li>
+        <li><a href="https://github.com/swz30/Restormer">Restormer</a> <small>· advanced restoration reference</small></li>
+        <li><a href="https://onnxruntime.ai/docs/execution-providers/">ONNX Runtime execution providers</a> <small>· platform acceleration options</small></li>
+        <li><a href="https://onnxruntime.ai/docs/execution-providers/CoreML-ExecutionProvider.html">ONNX Runtime Core ML</a> <small>· Apple provider and operator notes</small></li>
+        <li><a href="https://onnxruntime.ai/docs/execution-providers/DirectML-ExecutionProvider.html">ONNX Runtime DirectML</a> <small>· Windows status and constraints</small></li>
+        <li><a href="https://onnxruntime.ai/docs/get-started/with-windows.html">ONNX Runtime for Windows</a> <small>· Windows ML recommendation and fallback scope</small></li>
+        <li><a href="https://learn.microsoft.com/windows/ai/new-windows-ml/supported-execution-providers">Windows ML providers</a> <small>· AMD, NVIDIA, Intel and Qualcomm device paths</small></li>
+        <li><a href="https://opencolorio.readthedocs.io/en/latest/guides/authoring/authoring.html">OpenColorIO authoring guide</a> <small>· spatial filters differ in scene-linear and perceptual encodings</small></li>
+        <li><a href="https://helpx.adobe.com/lightroom-cc/using/enhance-details.html">Adobe Lightroom Enhance</a> <small>· Denoise, Raw Details, Super Resolution</small></li>
+        <li><a href="https://www.adobe.com/learn/lightroom-cc/web/lightroom-ai-order-of-operations">Adobe AI edit order</a> <small>· HDR, Denoise, Raw Details and Super Resolution sequencing</small></li>
+        <li><a href="https://openaccess.thecvf.com/content/CVPR2025W/NTIRE/papers/Chen_NTIRE_2025_Challenge_on_Image_Super-Resolution_x4_Methods_and_Results_CVPRW_2025_paper.pdf">NTIRE 2025 Super-Resolution Challenge</a> <small>· evaluation metrics and results</small></li>
+      </ol>
+    </section>
+  </main>
+
+  <footer><div class="shell">ShopPhoto advanced imaging research · revised for full-resolution mask quality, precomputed Auto Finish and maximum-fidelity non-diffusion upscale. Model choices remain subject to corpus, legal, conversion and redistribution review.</div></footer>
+
+  <script>
+    const maskCopy = {
+      sky: "Sky · Cool highlights",
+      subject: "Subject · Lift attention",
+      object: "Object · Local color",
+      depth: "Depth · Mid-distance range"
+    };
+    const demo = document.querySelector("#maskDemo");
+    document.querySelectorAll(".tab[data-mask]").forEach(button => {
+      button.addEventListener("click", () => {
+        demo.dataset.mask = button.dataset.mask;
+        document.querySelector("#maskTitle").textContent = maskCopy[button.dataset.mask];
+        document.querySelectorAll(".tab[data-mask]").forEach(other => other.setAttribute("aria-pressed", String(other === button)));
+      });
+    });
+    const modeCopy = {
+      exact: "<strong>Exact sync</strong> replaces selected target values—ideal for curves, HSL, grading and a shared creative look. Auto Finish itself uses adaptive per-image analysis.",
+      relative: "<strong>Relative sync</strong> adds a delta to each target—ideal for +0.35 EV or a small temperature shift without flattening existing edits.",
+      adaptive: "<strong>Adaptive sync</strong> reruns intent per image—AI masks, Auto Balance, ISO-aware denoise and lens/profile resolution all adapt to the target."
+    };
+    document.querySelectorAll(".mode-button").forEach(button => {
+      button.addEventListener("click", () => {
+        document.querySelector("#modeNote").innerHTML = modeCopy[button.dataset.mode];
+        document.querySelectorAll(".mode-button").forEach(other => other.setAttribute("aria-pressed", String(other === button)));
+      });
+    });
+    document.querySelectorAll("[data-scale]").forEach(button => {
+      button.addEventListener("click", () => {
+        const scale = Number(button.dataset.scale);
+        const mp = 24 * scale * scale;
+        document.querySelector("#mpValue").textContent = `${mp} MP`;
+        document.querySelector("#pixelValue").textContent = `${scale * scale}×`;
+        document.querySelector("#surfaceValue").textContent = `${mp * 8} MB`;
+        document.querySelectorAll("[data-scale]").forEach(other => other.classList.toggle("active", other === button));
+      });
+    });
+  </script>
+</body>
+</html>

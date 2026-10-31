@@ -1,0 +1,17 @@
+make = "Hasselblad"
+model = "X1D II 50C"
+clean_make = "Hasselblad"
+clean_model = "X1D II 50C"
+#blackpoint = 0
+#whitepoint = 65535
+color_pattern = "RGGB"
+hints = ["uncompressed"]
+
+# ShopPhoto vendored patch: Phocus-written .fff files carry the make-prefixed
+# model string, which upstream rawler doesn't alias.
+model_aliases = [["Hasselblad X1D II 50C", "X1D II 50C"]]
+
+active_area = [46, 96, 58, 0]
+
+[cameras.color_matrix]
+D65 = [0.5002, -0.0878, 0.0111, -0.4856, 1.1929, 0.3338, -0.1183, 0.2041, 0.7022]

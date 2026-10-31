@@ -1,0 +1,54 @@
+ShopPhoto — photography editor
+
+Drag ShopPhoto.app onto Applications to install this build.
+
+Start with Open or Add photo folder. RAW and rendered photographs share the
+non-destructive Develop controls. Your originals remain separate from edits.
+
+Selected Library photos can be merged with Photo merge: HDR, burst average,
+focus stack, panorama, tracked astro or expert four-shot Bayer pixel shift.
+Inspect merge results and use a known capture sequence for specialized modes.
+
+Tools contains Library & offline, metadata and backups, external editor recipes,
+lens calibration, print/contact sheets, proof galleries, saved photo workflows,
+and workspaces/shortcuts/accessibility. Export offers profiles, watermarks,
+file-size targets and a persistent delivery queue.
+
+Version 0.5.0 brings ShopPhoto's own neural RAW denoise, bundled in this app:
+Detail → Noise Reduction → ShopPhoto RAW Denoise works on every Bayer RAW.
+Cleanest uses the complete model result; Preserve detail keeps 20–25 % of the
+original micro-contrast. The app also opens immediately again while network
+shares are mounted. See
+Photography Guide/release-0.5.0.md and the denoise model card beside it.
+
+Version 0.4.7 guides AI selections step by step and highlights each detected
+element and mask in the preview; layer clarity no longer draws halos around
+selected subjects. Version 0.4.6 added native Core ML subject masks and faithful
+crop upscaling. Tools → AI masks selects Sky, People, Cars or Motorcycles. Detect individual
+people or vehicles, inspect their previews, then create separate adjustment
+layers for the selected elements. Adjust exposure, color and detail in Local &
+retouch. Include/exclude points can refine the selected layer; brush repair,
+overlay inspection and undo remain available. No empty AI layer is accepted.
+
+Crop → AI 2× / AI 4× opens export with the cropped input and exact final sizes.
+AI processes the original crop before requested output resizing and sharpening.
+Upscaling estimates detail; difficult masks still need inspection and correction.
+
+Personal builds include local native enhancement models: no Python is
+needed for the four subject categories, point selection, boundary matting or
+SwinIR 2×/4×. Native enhancement requires macOS 15 or newer. Tools → AI runtime
+reports native model availability and provides the separate optional Python
+runtime for depth, text selection, additional checkpoints and portable fallback.
+See the included Native AI Models.md for exact model sources and licenses.
+See Photography Guide/release-0.4.7.md and release-0.4.6.md for changes and validation.
+
+Camera RAW denoise hardware choices remain in Tools → Settings. Core ML
+hardware policies allow CPU fallback and do not guarantee Neural Engine use.
+
+This universal macOS build runs on Apple Silicon and Intel. Native HEIC/AVIF
+input is included for the packaging host's architecture; standard photographic
+formats work in both slices. System & photo capabilities reports actual support.
+
+Photography Guide contains feature descriptions, test results and workflow
+limits. Real camera tethering, calibration captures and printer/display behavior
+depend on your equipment. No pixel layers, document text or vector editor is added.

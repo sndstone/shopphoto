@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ShopPhoto 0.2.4 / 0.2.5 Improvement Review</title>
+<style>
+/* Tokens. Dark and light are both first-class; no web fonts so the page
+   reads identically offline and in any viewer. */
+:root {
+  color-scheme: light;
+  --bg: #f2f0eb;
+  --panel: #faf9f6;
+  --panel-2: #ece9e2;
+  --line: #d6d2c8;
+  --line-2: #bfb9ac;
+  --text: #1b1d20;
+  --muted: #555b62;
+  --faint: #7d838a;
+  --accent: #a85f1c;
+  --accent-soft: rgba(168, 95, 28, 0.10);
+  --cyan: #146f7a;
+  --cyan-soft: rgba(20, 111, 122, 0.12);
+  --green: #2f6e2b;
+  --green-soft: rgba(47, 110, 43, 0.12);
+  --red: #b0342e;
+  --red-soft: rgba(176, 52, 46, 0.12);
+  --violet: #5f4d9c;
+  --violet-soft: rgba(95, 77, 156, 0.12);
+  --code-bg: rgba(0, 0, 0, 0.05);
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #111417;
+  --panel: #191e22;
+  --panel-2: #232930;
+  --line: #333a42;
+  --line-2: #4a525b;
+  --text: #f1eee8;
+  --muted: #b3b9bf;
+  --faint: #838b93;
+  --accent: #e8a865;
+  --accent-soft: rgba(232, 168, 101, 0.14);
+  --cyan: #7fd3dd;
+  --cyan-soft: rgba(127, 211, 221, 0.14);
+  --green: #9fd58f;
+  --green-soft: rgba(159, 213, 143, 0.14);
+  --red: #f09490;
+  --red-soft: rgba(240, 148, 144, 0.14);
+  --violet: #b9abee;
+  --violet-soft: rgba(185, 171, 238, 0.14);
+  --code-bg: rgba(255, 255, 255, 0.07);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #111417;
+    --panel: #191e22;
+    --panel-2: #232930;
+    --line: #333a42;
+    --line-2: #4a525b;
+    --text: #f1eee8;
+    --muted: #b3b9bf;
+    --faint: #838b93;
+    --accent: #e8a865;
+    --accent-soft: rgba(232, 168, 101, 0.14);
+    --cyan: #7fd3dd;
+    --cyan-soft: rgba(127, 211, 221, 0.14);
+    --green: #9fd58f;
+    --green-soft: rgba(159, 213, 143, 0.14);
+    --red: #f09490;
+    --red-soft: rgba(240, 148, 144, 0.14);
+    --violet: #b9abee;
+    --violet-soft: rgba(185, 171, 238, 0.14);
+    --code-bg: rgba(255, 255, 255, 0.07);
+  }
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 20px; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--cyan); }
+code {
+  font: 0.88em/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  background: var(--code-bg);
+  padding: 0.08em 0.35em;
+  border-radius: 4px;
+  overflow-wrap: anywhere;
+}
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-variant-numeric: tabular-nums; }
+h1, h2, h3 { line-height: 1.2; margin: 0; }
+
+/* Shell: one readable column, with a sticky rail only when there is room. */
+.shell {
+  width: min(1180px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 32px 0 80px;
+}
+@media (min-width: 960px) {
+  .shell {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: 40px;
+    padding-top: 44px;
+  }
+  .rail { position: sticky; top: 20px; align-self: start; }
+}
+.rail { display: flex; flex-direction: column; gap: 14px; margin-bottom: 28px; }
+.rail-card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px; }
+.rail-title { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); margin-bottom: 8px; }
+.rail nav { display: flex; flex-direction: column; gap: 2px; }
+.rail nav a { color: var(--muted); text-decoration: none; padding: 6px 8px; border-radius: 6px; font-size: 0.92rem; display: flex; justify-content: space-between; gap: 8px; }
+.rail nav a:hover { color: var(--text); background: var(--panel-2); }
+.rail nav .n { color: var(--faint); font-size: 0.78rem; }
+.rail-metric { display: flex; justify-content: space-between; gap: 10px; font-size: 0.88rem; color: var(--muted); padding: 3px 0; }
+.rail-metric b { color: var(--text); font-weight: 600; text-align: right; }
+.theme-toggle { background: var(--panel-2); border: 1px solid var(--line-2); color: var(--text); font: 500 0.8rem inherit; font-family: inherit; padding: 4px 10px; border-radius: 6px; cursor: pointer; }
+.rail-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.rail-head .rail-title { margin: 0; }
+
+/* Header */
+.eyebrow { color: var(--accent); font-weight: 700; font-size: 0.74rem; letter-spacing: 0.14em; text-transform: uppercase; }
+h1 { font-size: clamp(1.8rem, 3.6vw, 2.6rem); font-weight: 700; letter-spacing: -0.01em; margin: 8px 0 12px; }
+.lede { color: var(--muted); font-size: 1.05rem; max-width: 70ch; margin: 0 0 16px; }
+.meta-bar { display: flex; flex-wrap: wrap; gap: 8px 22px; padding: 10px 14px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; font-size: 0.86rem; color: var(--muted); margin-bottom: 26px; }
+.meta-bar strong { color: var(--text); font-weight: 600; }
+
+/* Summary cards */
+.metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-bottom: 26px; }
+.metric { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+.metric .num { display: block; font-size: 1.5rem; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
+.metric .label { display: block; font-weight: 600; font-size: 0.92rem; margin-top: 2px; }
+.metric .sub { display: block; font-size: 0.8rem; color: var(--muted); margin-top: 4px; line-height: 1.45; }
+
+/* Filters (progressive enhancement; the page reads fully without them) */
+.filters { display: none; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.js .filters { display: flex; }
+.chip { border: 1px solid var(--line-2); background: var(--panel-2); color: var(--muted); border-radius: 999px; padding: 4px 12px; font: 500 0.82rem inherit; font-family: inherit; cursor: pointer; }
+.chip:hover { color: var(--text); border-color: var(--text); }
+.chip[aria-pressed="true"] { background: var(--text); color: var(--bg); border-color: var(--text); }
+.filter-note { display: none; font-size: 0.82rem; color: var(--faint); margin: 0 0 8px; }
+.js .filter-note { display: block; }
+
+/* Callout */
+.callout { background: var(--accent-soft); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 8px; padding: 12px 16px; margin: 0 0 28px; font-size: 0.92rem; }
+.callout h2 { font-size: 1rem; margin-bottom: 6px; }
+.callout ul { margin: 0; padding-left: 20px; }
+.callout li { margin: 3px 0; }
+
+/* Sections */
+.track { margin-top: 36px; }
+.track-header { border-bottom: 1px solid var(--line-2); padding-bottom: 8px; margin-bottom: 14px; }
+.track-header h2 { font-size: 1.4rem; font-weight: 700; }
+.track-header p { margin: 4px 0 0; color: var(--muted); font-size: 0.88rem; }
+
+/* Cards */
+.item { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; margin-bottom: 14px; }
+.item[hidden] { display: none; }
+.item-top { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; margin-bottom: 8px; }
+.item-id { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.76rem; font-weight: 700; color: var(--accent); background: var(--accent-soft); padding: 3px 7px; border-radius: 4px; }
+.tag { display: inline-block; font-size: 0.74rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; border: 1px solid var(--line-2); color: var(--muted); }
+.tag.p1 { background: var(--red-soft); color: var(--red); border-color: transparent; }
+.tag.p2 { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
+.tag.p3 { background: var(--cyan-soft); color: var(--cyan); border-color: transparent; }
+.tag.blocked { background: var(--violet-soft); color: var(--violet); border-color: transparent; }
+.tag.s { border-color: var(--green); color: var(--green); }
+.tag.m { border-color: var(--accent); color: var(--accent); }
+.tag.l { border-color: var(--violet); color: var(--violet); }
+.item h3 { font-size: 1.12rem; font-weight: 600; margin-bottom: 8px; }
+.item p { margin: 0 0 10px; color: var(--muted); font-size: 0.94rem; }
+.item .why { color: var(--text); }
+.loc { background: var(--panel-2); border-left: 3px solid var(--accent); padding: 8px 12px; border-radius: 0 6px 6px 0; font-size: 0.84rem; color: var(--muted); margin: 0 0 10px; }
+.loc strong { color: var(--text); }
+.item ul { margin: 0; padding-left: 20px; font-size: 0.9rem; }
+.item li { margin: 3px 0; }
+.item .fix { margin-top: 10px; padding: 8px 12px; border-radius: 6px; background: var(--green-soft); font-size: 0.86rem; color: var(--text); }
+.item .fix strong { color: var(--green); }
+.item .warn { margin-top: 10px; padding: 8px 12px; border-radius: 6px; background: var(--violet-soft); font-size: 0.86rem; color: var(--text); }
+.item .warn strong { color: var(--violet); }
+
+.tag.st-todo { background: var(--panel-2); color: var(--muted); border-color: transparent; }
+.tag.st-doing { background: var(--cyan-soft); color: var(--cyan); border-color: transparent; }
+.tag.st-done { background: var(--green-soft); color: var(--green); border-color: transparent; }
+.tag.st-partial { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
+.tag.st-blocked { background: var(--violet-soft); color: var(--violet); border-color: transparent; }
+.item .status { margin-top: 10px; padding: 8px 12px; border-radius: 6px; background: var(--panel-2); border-left: 3px solid var(--line-2); font-size: 0.86rem; color: var(--text); }
+.item .status strong { color: var(--text); }
+
+/* Phases */
+.phases { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin-top: 18px; }
+.phase { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px; }
+.phase .tagline { font-size: 0.72rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 4px; }
+.phase h3 { font-size: 1.15rem; font-weight: 600; margin-bottom: 8px; }
+.phase ol { margin: 0; padding-left: 20px; font-size: 0.9rem; color: var(--muted); }
+.phase li { margin: 5px 0; }
+.phase li strong { color: var(--text); }
+
+footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 0.84rem; color: var(--faint); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+
+@media print {
+  .rail, .filters, .filter-note { display: none !important; }
+  .shell { display: block; width: auto; padding: 0; }
+  .item { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <aside class="rail">
+    <div class="rail-card">
+      <div class="rail-head">
+        <span class="rail-title">Contents</span>
+        <button class="theme-toggle" type="button" id="themeToggle">Theme</button>
+      </div>
+      <nav>
+        <a href="#corrections">Review corrections</a>
+        <a href="#track-perf">Performance <span class="n">4</span></a>
+        <a href="#track-arch">Modularity <span class="n">3</span></a>
+        <a href="#track-color">Color &amp; RAW <span class="n">2</span></a>
+        <a href="#track-ux">Photographic UX <span class="n">5</span></a>
+        <a href="#track-ai">AI models <span class="n">2</span></a>
+        <a href="#rollout">Implementation order</a>
+      </nav>
+    </div>
+    <div class="rail-card">
+      <div class="rail-title">Baseline</div>
+      <div class="rail-metric"><span>Proposals</span><b>16</b></div>
+      <div class="rail-metric"><span>P1</span><b style="color: var(--red);">4</b></div>
+      <div class="rail-metric"><span>Blocked</span><b style="color: var(--violet);">1</b></div>
+      <div class="rail-metric"><span>Rust lines</span><b class="mono">35,613</b></div>
+      <div class="rail-metric"><span>#[test] fns</span><b class="mono">301</b></div>
+      <div class="rail-metric"><span>Clippy</span><b style="color: var(--green);">-D warnings in CI</b></div>
+    </div>
+  </aside>
+
+  <main>
+    <div class="eyebrow">ShopPhoto 0.2.3 post-release review</div>
+    <h1>Improvement proposals for 0.2.4 / 0.2.5</h1>
+    <p class="lede">
+      A code-verified list of performance, structure, color, workflow, and AI improvements.
+      Every location below was checked against the tree on the audit date. Items the 0.2.3
+      plan already closed are not repeated here.
+    </p>
+    <div class="meta-bar">
+      <span>Target: <strong>0.2.4 / 0.2.5</strong></span>
+      <span>Platform: <strong>macOS · Windows · Linux</strong></span>
+      <span>Toolchain: <strong>Rust 1.92 · wgpu 29.0.4 · egui 0.35</strong></span>
+      <span>Audited: <strong>2026-09-03</strong></span>
+      <span>Prior plan: <strong><a href="improvement-plan.html">improvement-plan.html</a></strong></span>
+    </div>
+
+    <div class="metrics">
+      <div class="metric">
+        <span class="num">UI thread</span>
+        <span class="label">Thumbnail cache write</span>
+        <span class="sub">PNG encode plus a full cache directory scan runs inside the frame on every thumbnail.</span>
+      </div>
+      <div class="metric">
+        <span class="num">5 stalls</span>
+        <span class="label">Beach ball candidates</span>
+        <span class="sub">Five synchronous main-thread paths can run for seconds after a settings change. PERF-04 lists them and how to identify yours.</span>
+      </div>
+      <div class="metric">
+        <span class="num">37%</span>
+        <span class="label">of Rust in 3 files</span>
+        <span class="sub">panels.rs, app.rs, and renderer.rs total 13,148 lines.</span>
+      </div>
+      <div class="metric">
+        <span class="num">Adobe RGB</span>
+        <span class="label">Export gap only</span>
+        <span class="sub">Soft-proofing via custom ICC already shipped in 0.2.3. Export encoding is what is missing.</span>
+      </div>
+    </div>
+
+    <section class="callout" id="corrections">
+      <h2>What changed from the first draft of this review</h2>
+      <ul>
+        <li><strong>PERF-04</strong> is new. The macOS beach ball on settings changes was not covered by any item: PERF-01 is about frame hitching, which cannot block the main thread for seconds. The new item lists the five verified main-thread stalls and how to catch the one you are hitting.</li>
+        <li><strong>PERF-02</strong> is worse than described: the write runs on the UI thread, not just often. Promoted to the first item.</li>
+        <li><strong>PERF-01</strong> dropped the unmeasured "90%" figure and the garbage-collection wording. Profiling is now step one.</li>
+        <li><strong>ARCH-01 to 03</strong> no longer claim faster incremental builds. Rust compiles per crate, so file splits do not change that.</li>
+        <li><strong>COLOR-01</strong> is scoped to export. Custom ICC soft-proofing shipped as item D3 in the 0.2.3 plan.</li>
+        <li><strong>COLOR-02</strong> drops AMaZE. It is GPL code from RawTherapee and this repo is dual licensed. AHD from the paper only.</li>
+        <li><strong>COLOR-03</strong> was a UX item filed under color science. It is now <strong>UX-05</strong>.</li>
+        <li><strong>UX-02</strong> gained a catalog schema step because there is no stacking concept yet. Effort raised to L.</li>
+        <li><strong>UX-03</strong> names the real enum, <code>LocalMask</code>, not <code>MaskKind</code>.</li>
+        <li><strong>UX-04</strong> separates lossless (pure Rust) from lossy (libwebp, a native dependency).</li>
+        <li>Baseline numbers are now measured: 35,613 Rust lines, 301 test functions, and clippy with <code>-D warnings</code> in CI.</li>
+      </ul>
+    </section>
+
+    <div class="filters" role="group" aria-label="Filters">
+      <button class="chip" type="button" data-filter="all" aria-pressed="true">All</button>
+      <button class="chip" type="button" data-filter="p1" aria-pressed="false">P1</button>
+      <button class="chip" type="button" data-filter="perf" aria-pressed="false">Performance</button>
+      <button class="chip" type="button" data-filter="arch" aria-pressed="false">Architecture</button>
+      <button class="chip" type="button" data-filter="color" aria-pressed="false">Color &amp; RAW</button>
+      <button class="chip" type="button" data-filter="ux" aria-pressed="false">Photographic UX</button>
+      <button class="chip" type="button" data-filter="ai" aria-pressed="false">AI</button>
+    </div>
+    <p class="filter-note">Filters hide cards only. Section headings stay so the numbering keeps its meaning.</p>
+
+    <!-- 1. Performance -->
+    <section class="track" id="track-perf">
+      <div class="track-header">
+        <h2>1. Performance and storage</h2>
+        <p>Main-thread stalls behind the beach ball, frame hitching during edits, and I/O stalls during import.</p>
+      </div>
+
+      <article class="item" data-tags="p1 perf" id="PERF-04">
+        <div class="item-top">
+          <span class="item-id">PERF-04</span>
+          <span class="tag p1">P1</span>
+          <span class="tag m">Effort M</span>
+          <span class="tag st-done" data-status>Done</span>
+        </div>
+        <h3>Find and remove the main-thread stalls behind the beach ball on settings changes</h3>
+        <p class="why">
+          macOS shows the beach ball when the main thread stops servicing events for a few seconds. The proxy
+          re-render on a slider change is not that: it runs at quarter resolution or less, and the perf notes record
+          about 51 ms for open plus render on the X2D II file. So PERF-01 cannot explain a beach ball. These paths
+          can, and each was verified to run synchronously inside the eframe update on the UI thread.
+        </p>
+        <ul>
+          <li><strong>AI denoise shares the GPU with the viewport.</strong> Core ML is configured with <code>MLComputeUnitsAll</code> (coreml.m:7). Inference on a 100 MP frame runs on the same GPU the viewport is presenting to, so the next drawable can block the main thread for the length of the inference. Changing the camera denoise mode starts this (sync_ai_denoise, app.rs:2776).</li>
+          <li><strong>Turning AI denoise off, or its result arriving, reopens the image on the UI thread.</strong> gpu_open frees VRAM, uploads about 200 MB of CFA data, rebuilds every texture, and renders (app.rs:2127, called from 2796, 3571, 3630, 3664).</li>
+          <li><strong>The AI split compare builds a second complete renderer on the UI thread</strong> and uploads the RAW again (sync_ai_split_compare, app.rs:2889 to 2960).</li>
+          <li><strong>The sidecar save 500 ms after an edit is synchronous.</strong> JSON write and rename, a SQLite open that runs migrations, and the optional XMP write beside the source (save_sidecar_if_due, app.rs:2645 to 2720). Milliseconds on a local SSD, seconds on a network volume or SD card when write XMP is on.</li>
+          <li><strong>Thumbnails still streaming in from a folder scan</strong> each cost a PNG encode, a cache directory walk, and a SQLite open with migrations on the UI thread (PERF-02). A slider change during that window lands in the same stalls.</li>
+        </ul>
+        <div class="loc">
+          <strong>Catch the one you are hitting:</strong> next time the beach ball appears, run
+          <code>sample ShopPhoto 3 -file ~/Desktop/shopphoto-sample.txt</code> in Terminal, or use Activity Monitor,
+          select ShopPhoto, and choose Sample Process. The main thread's top frames will name one of the paths above.
+        </div>
+        <ul>
+          <li>Add a watchdog: time each section of update (job results, sidecar save, rerender, tile) and log any over 100 ms with its label. Cheap, permanent, and turns the next report into one log line.</li>
+          <li>Core ML: use CPU and Neural Engine on Apple silicon so inference does not contend with the viewport, and stop scheduling proxy re-renders while inference is in flight.</li>
+          <li>Move the CFA upload for AI results and the split-compare renderer construction into the worker, and swap the result in on a single frame.</li>
+          <li>Move the sidecar, XMP, and catalog writes to the existing sidecar sync worker. Open the catalog connection once and keep it instead of reopening and migrating per write.</li>
+          <li>PERF-02 for the thumbnail path.</li>
+        </ul>
+        <div class="warn"><strong>Not measured:</strong> these are the candidates the code allows, ranked by how long each can plausibly block. The sample will tell which one is real. Fix that one first.</div>
+        <div class="status"><strong>Status:</strong> Done 2026-09-03. (1) Watchdog: every section of the logic pass is timed; a frame over 100 ms (SHOPPHOTO_STALL_MS) logs a warning naming the slowest sections and the F12 overlay shows the last report. (2) A persist worker now owns every disk write the frame used to do: the debounced sidecar, XMP, catalog annotation and metadata rows, with one long-lived SQLite connection; on_exit flushes it. (3) Image opens, AI denoise results and the split-compare renderer are built on a worker thread that shares the compiled pipelines, then adopted on the UI thread in one frame; the export worker shares pipelines too. (4) Core ML compute units are selectable with SHOPPHOTO_COREML_UNITS. The override allows testing viewport contention. Verified: watchdog and persist tests, both headless smoke runs (open, and AI denoise with split compare), and the only stall the watchdog reported was the QA screenshot capture itself.</div>
+      </article>
+
+      <article class="item" data-tags="p1 perf" id="PERF-02">
+        <div class="item-top">
+          <span class="item-id">PERF-02</span>
+          <span class="tag p1">P1</span>
+          <span class="tag s">Effort S</span>
+          <span class="tag st-done" data-status>Done</span>
+        </div>
+        <h3>Move thumbnail cache writes off the UI thread and stop rescanning the cache on every write</h3>
+        <p class="why">
+          When a thumbnail job completes, the app handler encodes a 512 px PNG and calls the cache
+          store function on the UI thread, inside the frame. The store function then runs the budget
+          check, which reads the whole cache directory, stats every file, and sorts by modified time.
+          Importing a folder of 5,000 photos does that 5,000 times, each one blocking a frame.
+        </p>
+        <div class="loc">
+          <strong>Where:</strong> <code>crates/sp-app/src/app.rs:2104-2123</code> (store_cached_thumb),
+          <code>crates/sp-app/src/app.rs:3689</code> (called from the ThumbnailReady handler),
+          <code>crates/sp-catalog/src/thumbnails.rs:16-58</code> (store and enforce_budget)
+        </div>
+        <ul>
+          <li>Encode and store from the thumbnail worker, not the UI thread. The handler should only receive the ready texture.</li>
+          <li>Run the budget check once per scan batch, on idle, and at shutdown, not per write.</li>
+          <li>Keep a running byte total in memory so the check does not need a directory walk to decide it has nothing to do.</li>
+          <li>Optional: try QOI or lossless WebP for the thumbnail payload if PNG encode time shows up in the profile.</li>
+        </ul>
+        <div class="fix"><strong>Verified:</strong> the call site is inside the job-result loop in the eframe update path. Together with PERF-04 this is the highest-value work in the review.</div>
+        <div class="status"><strong>Status:</strong> Done 2026-09-03. The thumbnail worker now encodes the 512 px PNG and writes the cache entry itself (jobs.rs, cache_thumbnail); the UI handler only builds the egui texture. The budget walk runs when 64 MB of new entries have landed since the last walk, plus once per launch on a background thread (thumbnails.rs, enforce_budget_if_due). Catalog metadata rows from thumbnails and decodes go through the persist worker with one long-lived SQLite connection. Verified: sp-catalog tests for the interval and LRU order, and a headless open of a 50 MP file with a 16-image filmstrip showed no thumbnail-related stall in the watchdog log.</div>
+      </article>
+
+      <article class="item" data-tags="p1 perf" id="PERF-01">
+        <div class="item-top">
+          <span class="item-id">PERF-01</span>
+          <span class="tag p1">P1</span>
+          <span class="tag m">Effort M</span>
+          <span class="tag st-done" data-status>Closed by measurement</span>
+        </div>
+        <h3>Persistent uniform buffers and bind groups for the proxy render</h3>
+        <p class="why">
+          The color buffers function builds every uniform buffer with create_buffer_init on each render,
+          and the callers create fresh bind groups around them. Renders only run when the edit key changes,
+          so this is once per slider tick during a drag, not once per displayed frame. On a 120 Hz display
+          a drag can still trigger a render on most frames.
+        </p>
+        <div class="loc">
+          <strong>Where:</strong> <code>crates/sp-pipeline/src/renderer.rs:1218</code> (color_buffers) and the
+          create_buffer_init calls at lines 1277, 1320, 1328, 1412 to 1471, 1614 to 1695, 1822 to 1847
+        </div>
+        <ul>
+          <li>Profile first. Extend the perf budget tests to time a slider drag and record how much of a render is buffer creation versus compute dispatch. If it is under a few percent, close this item.</li>
+          <li>Allocate the uniform buffers once per loaded image with COPY_DST and update them with queue.write_buffer.</li>
+          <li>Cache bind groups and invalidate them only when a texture or its dimensions change.</li>
+        </ul>
+        <div class="warn"><strong>Correction:</strong> the first draft claimed a 90% reduction and "garbage collection pressure". Neither is measured, and wgpu has no garbage collector. Deferred resource destruction is the real cost.</div>
+        <div class="status"><strong>Status:</strong> Closed 2026-09-03 without the buffer change. A new perf-budget entry (proxy_render_cpu) measures the main-thread cost of a proxy render, which is where buffer and bind-group creation live: about 0.5 ms per render against a 10 ms GPU render on the development Mac. Persistent buffers could save at most a fraction of that and cannot affect a beach ball, so the plan’s own rule applied: under a few percent, close it. The budget stays in the test suite as a regression guard.</div>
+      </article>
+
+      <article class="item" data-tags="perf" id="PERF-03">
+        <div class="item-top">
+          <span class="item-id">PERF-03</span>
+          <span class="tag p2">P2</span>
+          <span class="tag m">Effort M</span>
+          <span class="tag st-done" data-status>Done</span>
+        </div>
+        <h3>FTS5 index for catalog text search</h3>
+        <p class="why">
+          The library query lowercases a concatenation of path, caption, keywords, camera, and lens and
+          runs a LIKE with leading and trailing wildcards. That is a full table scan per keystroke.
+          It is fine for a personal catalog of a few thousand images and becomes noticeable in the tens of thousands.
+        </p>
+        <div class="loc"><strong>Where:</strong> <code>crates/sp-catalog/src/catalog.rs:319-334</code></div>
+        <ul>
+          <li>Add an FTS5 virtual table over those five columns with insert, update, and delete triggers on the photos table.</li>
+          <li>Enable the fts5 feature on the bundled SQLite build and add a migration step for existing catalogs.</li>
+          <li>Use prefix queries so live search stays incremental.</li>
+        </ul>
+        <div class="status"><strong>Status:</strong> Done 2026-09-04. A migration adds an external-content FTS5 table over path, caption, keywords, camera and lens with the unicode61 tokenizer, insert, update and delete triggers on photos, and a rebuild for existing catalogs; the bundled SQLite already compiles FTS5 in. The library query now matches photo ids against the index instead of a LIKE over a concatenation. Free text becomes quoted prefix phrases joined with AND, so IMG_00 still finds IMG_0001 and user input such as AND or parentheses cannot break the query; punctuation-only input is treated as no filter. Verified by tests covering prefix, case, multi-term AND, caption and keyword matches, metadata written after the scan, and rows removed by a rescan.</div>
+      </article>
+    </section>
+
+    <!-- 2. Architecture -->
+    <section class="track" id="track-arch">
+      <div class="track-header">
+        <h2>2. Code structure</h2>
+        <p>Three files hold 37% of the Rust. The case is readability and merge friction, not compile time.</p>
+      </div>
+
+      <article class="item" data-tags="arch" id="ARCH-01">
+        <div class="item-top">
+          <span class="item-id">ARCH-01</span>
+          <span class="tag p2">P2</span>
+          <span class="tag m">Effort M</span>
+          <span class="tag st-done" data-status>Done</span>
+        </div>
+        <h3>Split panels.rs (5,012 lines) into a module directory</h3>
+        <p class="why">
+          One file holds the top bar, left rail, inspector, filmstrip, library grid, dialogs, and viewport canvas.
+          Any UI change touches it, and reviewers cannot see where one panel's state ends and the next begins.
+        </p>
+        <div class="loc"><strong>Where:</strong> <code>crates/sp-app/src/panels.rs</code></div>
+        <ul>
+          <li><code>panels/develop.rs</code>: exposure, curves, color grading, HSL, detail, lens, retouching.</li>
+          <li><code>panels/library.rs</code>: grid, filters, metadata.</li>
+          <li><code>panels/viewport.rs</code>: pan and zoom, AI compare split, loupe.</li>
+          <li><code>panels/dialogs.rs</code>: import, export, reference match, shortcuts.</li>
+          <li>Do this in one commit with no behavior change, then rerun the visual regression harness.</li>
+        </ul>
+        <div class="warn"><strong>Correction:</strong> the first draft said this speeds up incremental builds. It does not. rustc compiles the whole crate as one unit. If build time is the goal, split sp-app into crates instead.</div>
+        <div class="status"><strong>Status:</strong> Done 2026-09-03. panels.rs is 57 lines of module declarations and re-exports; the UI lives in src/panels/: chrome (top bar, left rail, shared widgets), develop (the inspector and its slider widgets, 1,992 lines), library (grid, filmstrip, card import), dialogs (export, Reference Match, overlays, modals), viewport (image view with geometry, retouch and crop overlays). Callers still use panels::name. Verified the same way as ARCH-03.</div>
+      </article>
+
+      <article class="item" data-tags="arch" id="ARCH-02">
+        <div class="item-top">
+          <span class="item-id">ARCH-02</span>
+          <span class="tag p2">P2</span>
+          <span class="tag m">Effort M</span>
+          <span class="tag st-done" data-status>Done</span>
+        </div>
+        <h3>Split app.rs (4,953 lines) by responsibility</h3>
+        <p class="why">
+          The app struct owns the eframe update loop, background job results, file dialogs, GPU readback polling,
+          keyboard dispatch, sidecar sync, and thumbnail caching.
+        </p>
+        <div class="loc"><strong>Where:</strong> <code>crates/sp-app/src/app.rs</code></div>
+        <ul>
+          <li><code>app/jobs.rs</code>: the job-result match, including the thumbnail and AI denoise arms.</li>
+          <li><code>app/render.rs</code>: gpu_rerender_if_dirty, proxy and tile scheduling, histogram pollers.</li>
+          <li><code>app/files.rs</code>: sidecar persistence, card import, moves and renames.</li>
+          <li>Land PERF-02 first so the thumbnail path moves once, not twice.</li>
+        </ul>
+        <div class="status"><strong>Status:</strong> Done 2026-09-03. app.rs is now 1,188 lines: the struct, construction, the eframe logic and ui passes, and tests. Eleven submodules under src/app/ hold the rest by responsibility: config (paths, preferences, resource loading), library (folders, card import, file moves), export, imports (profiles, looks, ICC, presets, Reference Match), render (worker-built renderers, adoption, re-render and 1:1 tiles), auto (histogram-driven analysis), sidecar (persistence, virtual copies, opening files), ai (denoise scheduling and split compare), results (job-result drain), hooks (screenshot, device loss, EDR and HDR), and shortcuts. No behavior change: clippy clean, tests pass, and the two headless smoke runs produced identical screenshots before and after the move.</div>
+      </article>
+
+      <article class="item" data-tags="arch" id="ARCH-03">
+        <div class="item-top">
+          <span class="item-id">ARCH-03</span>
+          <span class="tag p2">P2</span>
+          <span class="tag m">Effort M</span>
+          <span class="tag st-done" data-status>Done</span>
+        </div>
+        <h3>Split renderer.rs (3,183 lines)</h3>
+        <p class="why">
+          Proxy rendering, 1:1 tiles, tiled export, superpixel export, color buffer construction, and shader
+          parameter packing share one file.
+        </p>
+        <div class="loc"><strong>Where:</strong> <code>crates/sp-pipeline/src/renderer.rs</code></div>
+        <ul>
+          <li><code>renderer/proxy.rs</code>, <code>renderer/tile.rs</code>, <code>renderer/export.rs</code>, <code>renderer/buffers.rs</code>.</li>
+          <li>Do it after PERF-01 so the buffer ownership change and the file move are separate diffs.</li>
+        </ul>
+        <div class="status"><strong>Status:</strong> Done 2026-09-03. renderer.rs is 540 lines (types, construction, setters, LUT uploads) with four submodules under src/renderer/: proxy (open and the interactive render, histogram polling), buffers (every per-render uniform buffer and bind group), tile (1:1 tiles and the loupe), export (full-resolution renders, superpixel export, readbacks). Public paths such as sp_pipeline::renderer::TileInfo are unchanged. Verified: clippy clean, 316 tests pass, golden and perf-budget suites unchanged, and both headless smoke runs produced identical screenshots.</div>
+      </article>
+    </section>
+
+    <!-- 3. Color -->
+    <section class="track" id="track-color">
+      <div class="track-header">
+        <h2>3. Color and RAW pipeline</h2>
+        <p>One export gap and one demosaic quality option.</p>
+      </div>
+
+      <article class="item" data-tags="color" id="COLOR-01">
+        <div class="item-top">
+          <span class="item-id">COLOR-01</span>
+          <span class="tag p2">P2</span>
+          <span class="tag s">Effort S</span>
+          <span class="tag st-done" data-status>Done</span>
+        </div>
+        <h3>Adobe RGB (1998) as an export color space</h3>
+        <p class="why">
+          Export offers sRGB, Display P3, and Rec.2020. Print labs and fine-art workflows still ask for Adobe RGB.
+          Soft-proofing against an Adobe RGB display profile already works through the custom ICC proof path that
+          shipped in 0.2.3, so this item is only about encoding and the embedded profile.
+        </p>
+        <div class="loc">
+          <strong>Where:</strong> <code>crates/sp-core/src/color.rs:14-19</code> (OutputColorSpace),
+          <code>crates/sp-export/src/encode.rs:11-21</code> (icc_profile via moxcms)
+        </div>
+        <ul>
+          <li>Add the AdobeRgb variant with Adobe RGB primaries, D65 white point, and the 563/256 gamma transfer.</li>
+          <li>Add the Rec.2020 to Adobe RGB matrix in the output transform and a round-trip unit test like the existing ones in color.rs.</li>
+          <li>Emit the matching matrix-shaper ICC from the same icc_profile function so JPEG, TIFF, and PNG embed it.</li>
+        </ul>
+        <div class="fix"><strong>Verified:</strong> ICC embedding for JPEG, TIFF, PNG, and JPEG XL already goes through one function, which is why this is small.</div>
+        <div class="status"><strong>Status:</strong> Done 2026-09-03. OutputColorSpace::AdobeRgb with the published D65 matrices (ADOBERGB_TO_XYZ, REC2020_TO_ADOBERGB and inverses) and the 563/256 transfer in sp-core color.rs; a Transfer enum tells the output shaders which OETF to apply through proof_flags.z, so exports are encoded with the Adobe gamma while the proof view stays sRGB. The export encoder embeds moxcms’ Adobe RGB (1998) matrix-shaper profile for JPEG, TIFF, PNG and JPEG XL; AVIF leaves CICP unspecified so viewers use the ICC. Export resampling and sharpening decode and re-encode with the Adobe gamma. The export dialog offers Adobe RGB (1998). Verified with five new tests: matrix consistency and transfer round trip (sp-core), CPU conversion of sRGB red, green and grey to the expected Adobe code values (sp-export), the embedded profile description and colorant (sp-export), and a GPU export of 18% grey in sRGB and Adobe RGB that decodes to the same linear value through each curve (sp-pipeline golden). Workspace total now 315 tests.</div>
+      </article>
+
+      <article class="item" data-tags="color" id="COLOR-02">
+        <div class="item-top">
+          <span class="item-id">COLOR-02</span>
+          <span class="tag p2">P2</span>
+          <span class="tag l">Effort L</span>
+          <span class="tag st-done" data-status>Done</span>
+        </div>
+        <h3>Edge-directed demosaic (AHD) for 1:1 view and export</h3>
+        <p class="why">
+          Bayer demosaic is Malvar (5×5 linear) for full quality and 2×2 superpixel for previews. Fine repeating
+          detail can show color moiré and zipper artifacts under Malvar. An adaptive homogeneity-directed pass
+          reduces both at higher compute cost.
+        </p>
+        <div class="loc">
+          <strong>Where:</strong> <code>shaders/demosaic_malvar.wgsl</code>, the superpixel dispatches in
+          <code>crates/sp-pipeline/src/renderer.rs</code>
+        </div>
+        <ul>
+          <li>Implement AHD from Hirakawa and Parks as a compute shader: horizontal and vertical interpolation, then homogeneity selection in CIELAB.</li>
+          <li>Expose a "High detail" toggle in the Details panel that applies to 1:1 view and export only. Keep Malvar for the proxy.</li>
+          <li>Extend the golden-image tests with a synthetic CFA fixture that has a fine grid so the improvement is measured, not eyeballed.</li>
+        </ul>
+        <div class="warn"><strong>Licensing:</strong> the first draft named AMaZE. That implementation is GPL from RawTherapee. Do not port it. AHD is published as a paper and is safe to implement from scratch.</div>
+        <div class="status"><strong>Status:</strong> Done 2026-09-04. A new high-detail AHD compute pass builds horizontal and vertical color-difference candidates, scores their 3×3 neighbourhoods in CIELAB after as-shot white balance and the camera matrix, and selects the more homogeneous direction. The Detail panel toggle affects 1:1 tiles and full-quality tiled exports while the fast proxy stays on Malvar. A real-GPU synthetic fine-grid regression verifies that AHD reduces false chroma by at least 15% relative to Malvar.</div>
+      </article>
+    </section>
+
+    <!-- 4. UX -->
+    <section class="track" id="track-ux">
+      <div class="track-header">
+        <h2>4. Photographic workflow</h2>
+        <p>Culling, external editors, masks, output formats, and on-canvas curve editing.</p>
+      </div>
+
+      <article class="item" data-tags="p1 ux" id="UX-01">
+        <div class="item-top">
+          <span class="item-id">UX-01</span>
+          <span class="tag p1">P1</span>
+          <span class="tag l">Effort L</span>
+          <span class="tag st-done" data-status>Done</span>
+        </div>
+        <h3>Two-up and four-up compare for culling</h3>
+        <p class="why">
+          The only split view today is the AI denoise before and after on one image. Choosing between frames in a
+          burst or bracket needs two different photos side by side with locked pan and 1:1 zoom.
+        </p>
+        <div class="loc">
+          <strong>Where:</strong> <code>crates/sp-app/src/hdr_view.rs</code> (HdrBlitPack, compare_mode),
+          <code>crates/sp-app/src/panels.rs</code> (ai_compare_split)
+        </div>
+        <ul>
+          <li>Allow two or four selected images in the filmstrip and grid.</li>
+          <li>Render each into its own proxy texture and tile the viewport, with an optional pan and zoom lock.</li>
+          <li>Add promote and reject keys that act on the focused tile.</li>
+        </ul>
+        <div class="warn"><strong>Note:</strong> this is the most expensive P1 in the list. It stays P1 because culling is a daily task, but it is a judgment call, not a defect.</div>
+        <div class="status"><strong>Status:</strong> Done 2026-09-04. Selecting two to four catalog or filmstrip photos enables a two-up/four-up culling view. Each cell owns an independently developed proxy and requests a 1:1 tile when zoomed; pan and zoom can be locked or independent. Click and arrow keys focus a cell, Enter or double-click opens it, and P, X, U and 0–5 persist picks, rejects and ratings to its catalog row and sidecar.</div>
+      </article>
+
+      <article class="item" data-tags="ux" id="UX-02">
+        <div class="item-top">
+          <span class="item-id">UX-02</span>
+          <span class="tag p2">P2</span>
+          <span class="tag l">Effort L</span>
+          <span class="tag st-done" data-status>Done</span>
+        </div>
+        <h3>Edit in an external editor and bring the result back</h3>
+        <p class="why">
+          Compositing and retouching beyond ShopPhoto's tools happen in Photoshop or Affinity. The round trip
+          should produce a TIFF, open it, and re-ingest the saved file next to the original.
+        </p>
+        <div class="loc">
+          <strong>Where:</strong> <code>crates/sp-app/src/app.rs</code>,
+          <code>crates/sp-catalog/src/workflow.rs</code>, <code>crates/sp-catalog/src/catalog.rs</code>
+        </div>
+        <ul>
+          <li>Add a stack or companion relation to the catalog schema. There is none today, so the "ingest as companion" step needs it first.</li>
+          <li>Export a 16-bit TIFF in the active color space, spawn the chosen editor, and watch the file.</li>
+          <li>On save, add the TIFF to the catalog as a companion of the RAW and select it.</li>
+        </ul>
+        <div class="warn"><strong>Correction:</strong> effort raised from M to L for the schema and watcher work.</div>
+        <div class="status"><strong>Status:</strong> Done 2026-09-04. A catalog migration adds a durable source-to-companion relation. The External editor menu exports a dedicated 16-bit TIFF in the active color space, launches either a chosen application or the system default, and watches the rendered file for saves. A saved TIFF is ingested, linked to its RAW, selected in the library, decoded through the rendered-image thumbnail fallback, and marked with a TIFF companion badge. Regression coverage includes relation survival across rescans and macOS path aliases.</div>
+      </article>
+
+      <article class="item" data-tags="ux" id="UX-03">
+        <div class="item-top">
+          <span class="item-id">UX-03</span>
+          <span class="tag p2">P2</span>
+          <span class="tag m">Effort M</span>
+          <span class="tag st-done" data-status>Done</span>
+        </div>
+        <h3>Color range mask</h3>
+        <p class="why">
+          Local masks are brush, radial, linear gradient, and luminance range. There is no way to isolate a hue
+          such as sky, foliage, or skin.
+        </p>
+        <div class="loc">
+          <strong>Where:</strong> <code>crates/sp-core/src/edit.rs:784-804</code> (LocalMask),
+          <code>shaders/retouch.wgsl</code>
+        </div>
+        <ul>
+          <li>Add <code>LocalMask::ColorRange</code> with a target in Oklab a/b, a radius, and a feather.</li>
+          <li>Add an on-canvas dropper that samples the proxy texture to set the target.</li>
+          <li>Evaluate it in the retouch shader alongside the luminance range mask.</li>
+        </ul>
+        <div class="status"><strong>Status:</strong> Done 2026-09-04. LocalMask::ColorRange stores an Oklab a/b target, radius and feather. The Develop panel creates and edits the mask, and its on-canvas dropper samples one proxy pixel into the same transform used by the retouch shader. Unit and real-GPU tests cover serialization, clamping and isolation of the sampled hue.</div>
+      </article>
+
+      <article class="item" data-tags="ux" id="UX-04">
+        <div class="item-top">
+          <span class="item-id">UX-04</span>
+          <span class="tag p3">P3</span>
+          <span class="tag s">Effort S</span>
+          <span class="tag st-done" data-status>Done (lossless)</span>
+        </div>
+        <h3>WebP export</h3>
+        <p class="why">
+          Export supports JPEG, TIFF, PNG, AVIF, JPEG XL, and Ultra HDR. WebP is missing.
+        </p>
+        <div class="loc"><strong>Where:</strong> <code>crates/sp-export/src/lib.rs:54-82</code> (ExportFormat), <code>crates/sp-export/src/encode.rs</code></div>
+        <ul>
+          <li>Add <code>ExportFormat::WebP { lossless, quality }</code>.</li>
+          <li>Lossless first, using the pure-Rust encoder in the image crate, with the ICC and EXIF written as RIFF chunks.</li>
+          <li>Lossy needs libwebp, a native dependency. Put it behind a cargo feature and confirm the Windows and Linux builds before turning it on by default.</li>
+        </ul>
+        <div class="status"><strong>Status:</strong> Done 2026-09-03 for lossless. ExportFormat::WebP { lossless } encodes through the pure-Rust encoder in the image crate with the ICC profile and EXIF embedded as RIFF chunks, and the export dialog offers WebP. Lossy WebP still needs libwebp; selecting it returns a clear error instead of silently writing lossless, and the UI only offers lossless until a native encoder is added behind a cargo feature. Verified by a round-trip test that decodes the file, checks the pixels are bit-exact and the ICCP chunk is present, and that lossy reports the missing encoder.</div>
+      </article>
+
+      <article class="item" data-tags="ux" id="UX-05">
+        <div class="item-top">
+          <span class="item-id">UX-05</span>
+          <span class="tag p2">P2</span>
+          <span class="tag m">Effort M</span>
+          <span class="tag st-done" data-status>Done</span>
+        </div>
+        <h3>On-canvas tone curve pipette</h3>
+        <p class="why">
+          Curve points are placed by dragging in the inspector. Clicking on a highlight, midtone, or shadow in the
+          image and dragging up or down should add and move the nearest point.
+        </p>
+        <div class="loc"><strong>Where:</strong> <code>crates/sp-app/src/panels.rs</code> (curves panel), <code>crates/sp-core/src/edit.rs</code> (curve state)</div>
+        <ul>
+          <li>Sample luminance from the proxy texture at the pointer.</li>
+          <li>Add or select the nearest Catmull-Rom point and move it with the drag delta.</li>
+        </ul>
+        <div class="fix"><strong>Moved:</strong> this was COLOR-03 in the first draft. It is a UX item.</div>
+        <div class="status"><strong>Status:</strong> Done 2026-09-04. “Adjust from image” activates a viewport pipette for the selected luma, red, green or blue point curve. The initial click samples the displayed proxy, inserts or selects the nearest interior Catmull-Rom point, and vertical dragging moves that point through the normal undoable edit path.</div>
+      </article>
+    </section>
+
+    <!-- 5. AI -->
+    <section class="track" id="track-ai">
+      <div class="track-header">
+        <h2>5. AI models</h2>
+        <p>Subject and sky masks require a model that can be shipped.</p>
+      </div>
+
+
+      <article class="item" data-tags="ai" id="AI-02">
+        <div class="item-top">
+          <span class="item-id">AI-02</span>
+          <span class="tag blocked">Blocked</span>
+          <span class="tag l">Effort L</span>
+          <span class="tag st-blocked" data-status>Blocked</span>
+        </div>
+        <h3>Subject and sky masks from a segmentation model</h3>
+        <p class="why">
+          One-click subject, background, and sky masks would remove most brush work for local adjustments. A small
+          quantized ONNX segmentation model on the proxy frame is enough, and the tract-onnx runtime is already a dependency.
+        </p>
+        <div class="loc"><strong>Where:</strong> <code>crates/sp-ai/src/lib.rs</code>, <code>crates/sp-core/src/edit.rs</code> (LocalMask)</div>
+        <ul>
+          <li>Pick a model with a license on the existing allowlist and ship it through the same manifest path.</li>
+          <li>Add a <code>LocalMask::Raster</code> variant holding an 8-bit alpha texture so the retouch shader can consume it.</li>
+        </ul>
+        <div class="warn"><strong>Status:</strong> Blocked after licensing audit 2026-09-04. Candidate weights either lack an explicit redistribution license, inherit noncommercial segmentation terms, or do not provide the required one-click subject and sky classes. A repository license for inference code is not sufficient authorization to bundle its weights. Add the raster-mask path only with a provenance-checked model and a committed license, version and SHA-256 entry in the existing manifest.</div>
+      </article>
+    </section>
+
+    <!-- 6. Order -->
+    <section class="track" id="rollout">
+      <div class="track-header">
+        <h2>6. Implementation order</h2>
+        <p>Quick wins first, structure before features, blocked items kept out of the schedule.</p>
+      </div>
+      <div class="phases">
+        <div class="phase">
+          <div class="tagline">Phase 1 · 0.2.4</div>
+          <h3>Measured quick wins</h3>
+          <ol>
+            <li><strong>PERF-04</strong> sample the beach ball, add the update watchdog, fix the path it names.</li>
+            <li><strong>PERF-02</strong> thumbnail write off the UI thread, budget check batched.</li>
+            <li><strong>PERF-01</strong> profile the drag path, then persistent buffers if it pays.</li>
+            <li><strong>COLOR-01</strong> Adobe RGB export with embedded ICC.</li>
+            <li><strong>UX-04</strong> lossless WebP export.</li>
+          </ol>
+        </div>
+        <div class="phase">
+          <div class="tagline">Phase 2 · structure</div>
+          <h3>Splits and search</h3>
+          <ol>
+            <li><strong>ARCH-02</strong> app.rs, after PERF-02 has moved the thumbnail path.</li>
+            <li><strong>ARCH-03</strong> renderer.rs, after PERF-01 has settled buffer ownership.</li>
+            <li><strong>ARCH-01</strong> panels.rs.</li>
+            <li><strong>PERF-03</strong> FTS5 search.</li>
+          </ol>
+        </div>
+        <div class="phase">
+          <div class="tagline">Phase 3 · 0.2.5</div>
+          <h3>Workflow features</h3>
+          <ol>
+            <li><strong>UX-01</strong> two-up and four-up culling.</li>
+            <li><strong>UX-03</strong> color range mask.</li>
+            <li><strong>UX-05</strong> curve pipette.</li>
+            <li><strong>UX-02</strong> external editor round trip.</li>
+            <li><strong>COLOR-02</strong> AHD demosaic.</li>
+          </ol>
+        </div>
+        <div class="phase">
+          <div class="tagline">Not scheduled</div>
+          <h3>Blocked on external input</h3>
+          <ol>
+            <li><strong>AI-02</strong> needs redistribution-safe subject and sky segmentation weights with clear provenance.</li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div>ShopPhoto improvement review · verified against the tree on 2026-09-03</div>
+      <div class="mono">Rust 1.92 · wgpu 29.0.4 · egui 0.35</div>
+    </footer>
+  </main>
+</div>
+
+<script>
+(function () {
+  var root = document.documentElement;
+  root.classList.add('js');
+
+  // Theme toggle that starts from the scheme actually in effect, so the first
+  // click always changes something.
+  var toggle = document.getElementById('themeToggle');
+  function effectiveTheme() {
+    var set = root.getAttribute('data-theme');
+    if (set) return set;
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+  function label() { toggle.textContent = effectiveTheme() === 'dark' ? 'Light theme' : 'Dark theme'; }
+  toggle.addEventListener('click', function () {
+    root.setAttribute('data-theme', effectiveTheme() === 'dark' ? 'light' : 'dark');
+    label();
+  });
+  label();
+
+  // Filters hide cards by tag. Headings stay.
+  var chips = document.querySelectorAll('.filters .chip');
+  var cards = document.querySelectorAll('.item');
+  Array.prototype.forEach.call(chips, function (chip) {
+    chip.addEventListener('click', function () {
+      var tag = chip.getAttribute('data-filter');
+      Array.prototype.forEach.call(chips, function (c) {
+        c.setAttribute('aria-pressed', c === chip ? 'true' : 'false');
+      });
+      Array.prototype.forEach.call(cards, function (card) {
+        var tags = (card.getAttribute('data-tags') || '').split(' ');
+        card.hidden = !(tag === 'all' || tags.indexOf(tag) !== -1);
+      });
+    });
+  });
+})();
+</script>
+</body>
+</html>

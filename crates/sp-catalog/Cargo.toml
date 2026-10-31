@@ -1,0 +1,27 @@
+[package]
+name = "sp-catalog"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+sp-core = { workspace = true }
+serde = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+serde_json = { workspace = true }
+rusqlite = { version = "0.37", features = ["bundled", "backup"] }
+rusqlite_migration = "2"
+walkdir = "2"
+notify = "8"
+blake3 = "1"
+trash = { version = "5.2.6", default-features = false }
+# Reading foreign XMP (Lightroom/Bridge attribute and element forms).
+quick-xml = "0.38"
+
+[target.'cfg(any(target_os = "macos", target_os = "linux"))'.dependencies]
+libc = "0.2"
+
+[dev-dependencies]
+tempfile = "3"

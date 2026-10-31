@@ -1,0 +1,25 @@
+[package]
+name = "sp-ai"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+sp-core = { workspace = true }
+thiserror = { workspace = true }
+dirs = "6"
+serde = { workspace = true }
+serde_json = { workspace = true }
+sha2 = "0.10"
+tempfile = "3"
+ureq = { version = "3", default-features = false, features = ["rustls", "json"] }
+
+[target.'cfg(not(target_os="macos"))'.dependencies]
+tract-onnx = "0.23.9"
+
+[build-dependencies]
+cc = "1"
+
+[dev-dependencies]
+sp-raw = { path = "../sp-raw" }

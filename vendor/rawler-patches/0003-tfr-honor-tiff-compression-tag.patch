@@ -1,0 +1,21 @@
+--- a/rawler/src/decoders/tfr.rs
++++ b/rawler/src/decoders/tfr.rs
+@@ -68,7 +68,17 @@
+ 
+     let src = file.subview_until_eof(offset as u64)?;
+ 
+-    let image = if self.camera.find_hint("uncompressed") {
++    // ShopPhoto vendored patch: prefer the raw IFD's Compression tag over the
++    // per-camera "uncompressed" hint. Phocus-processed .fff files from
++    // cameras whose 3FRs are uncompressed carry LJPEG-compressed data, so a
++    // camera-level hint alone picks the wrong path. Tag absent → keep the
++    // upstream hint behavior.
++    let uncompressed = match raw.get_entry(TiffCommonTag::Compression).map(|tag| tag.force_usize(0)) {
++      Some(1) => true,
++      Some(_) => false,
++      None => self.camera.find_hint("uncompressed"),
++    };
++    let image = if uncompressed {
+       decode_16le(src, width, height, dummy)
+     } else {
+       self.decode_compressed(src, width, height, dummy)?

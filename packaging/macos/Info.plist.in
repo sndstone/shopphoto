@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+  <key>CFBundleName</key><string>ShopPhoto</string>
+  <key>CFBundleDisplayName</key><string>ShopPhoto</string>
+  <key>CFBundleExecutable</key><string>ShopPhoto</string>
+  <key>CFBundleIdentifier</key><string>com.shopphoto.app</string>
+  <key>CFBundleDevelopmentRegion</key><string>en</string>
+  <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
+  <key>CFBundleVersion</key><string>@VERSION@</string>
+  <key>CFBundleShortVersionString</key><string>@VERSION@</string>
+  <key>CFBundlePackageType</key><string>APPL</string>
+  <key>CFBundleIconFile</key><string>ShopPhoto.icns</string>
+  <key>LSApplicationCategoryType</key><string>public.app-category.photography</string>
+  <key>LSMinimumSystemVersion</key><string>12.0</string>
+  <key>NSHighResolutionCapable</key><true/>
+  <key>CFBundleDocumentTypes</key><array><dict>
+    <key>CFBundleTypeName</key><string>RAW Photo</string>
+    <key>CFBundleTypeRole</key><string>Editor</string>
+    <key>LSItemContentTypes</key><array><string>public.camera-raw-image</string></array>
+    <key>LSHandlerRank</key><string>Alternate</string>
+    <key>CFBundleTypeIconFile</key><string>ShopPhoto.icns</string>
+    <key>CFBundleTypeExtensions</key><array>
+      <string>3fr</string><string>ari</string><string>arw</string><string>cr2</string>
+      <string>cr3</string><string>crm</string><string>crw</string><string>dcr</string>
+      <string>dcs</string><string>dng</string><string>erf</string><string>fff</string>
+      <string>iiq</string><string>kdc</string><string>mef</string><string>mos</string>
+      <string>mrw</string><string>nef</string><string>nrw</string><string>orf</string>
+      <string>ori</string><string>pef</string><string>qtk</string><string>raf</string>
+      <string>raw</string><string>rw2</string><string>rwl</string><string>srw</string>
+      <string>x3f</string>
+    </array>
+  </dict><dict>
+    <key>CFBundleTypeName</key><string>Rendered Photo</string>
+    <key>CFBundleTypeRole</key><string>Editor</string>
+    <key>LSItemContentTypes</key><array>
+      <string>public.jpeg</string><string>public.png</string><string>public.tiff</string>
+      <string>org.webmproject.webp</string><string>com.microsoft.bmp</string>
+      <string>public.jpeg-xl</string><string>public.avif</string>
+      <string>public.heic</string><string>public.heif</string>
+    </array>
+    <key>LSHandlerRank</key><string>Alternate</string>
+    <key>CFBundleTypeIconFile</key><string>ShopPhoto.icns</string>
+    <key>CFBundleTypeExtensions</key><array>
+      <string>jpg</string><string>jpeg</string><string>png</string>
+      <string>tif</string><string>tiff</string><string>webp</string>
+      <string>bmp</string><string>jxl</string><string>avif</string>
+      <string>heic</string><string>heif</string>
+    </array>
+  </dict></array>
+</dict></plist>

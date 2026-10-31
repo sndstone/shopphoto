@@ -1,0 +1,73 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/sp-core",
+    "crates/sp-raw",
+    "crates/sp-gpu",
+    "crates/sp-pipeline",
+    "crates/sp-export",
+    "crates/sp-catalog",
+    "crates/sp-app",
+    "crates/sp-ai",
+]
+exclude = ["fuzz"]
+
+[workspace.package]
+version = "0.5.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+rust-version = "1.92"
+
+[workspace.dependencies]
+# Internal crates
+sp-core = { path = "crates/sp-core" }
+sp-raw = { path = "crates/sp-raw" }
+sp-gpu = { path = "crates/sp-gpu" }
+sp-pipeline = { path = "crates/sp-pipeline" }
+sp-export = { path = "crates/sp-export" }
+sp-catalog = { path = "crates/sp-catalog" }
+sp-ai = { path = "crates/sp-ai" }
+
+# External — versions resolved once here, used everywhere
+serde = { version = "1", features = ["derive", "rc"] }
+serde_json = "1"
+thiserror = "2"
+anyhow = "1"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+crossbeam-channel = "0.5"
+# Pinned to the wgpu major used by eframe/egui-wgpu 0.35
+wgpu = "29"
+bytemuck = { version = "1", features = ["derive"] }
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+
+# Fast iterative debug builds; image decode is unusable at opt-level 0.
+# The "*" override covers dependencies only, so hot workspace crates that
+# touch 100 MP buffers are listed explicitly (sp-app stays at 0 for fast
+# UI iteration).
+[profile.dev.package."*"]
+opt-level = 2
+
+[profile.dev.package.sp-core]
+opt-level = 2
+
+[profile.dev.package.sp-raw]
+opt-level = 2
+
+[profile.dev.package.sp-pipeline]
+opt-level = 2
+
+# Vendored rawler with one added model alias (Hasselblad X2D II 100C → X2D
+# 100C camera definition; same sensor, uncompressed 3FR). Drop this patch and
+# vendor/rawler once upstream dnglab supports the X2D II natively.
+[patch.crates-io]
+rawler = { path = "vendor/rawler" }
+# Vendored egui-wgpu with two minimal patches enabling macOS EDR (HDR)
+# display on wgpu 29: opt-in Rgba16Float surface preference via the
+# SHOPPHOTO_HDR_SURFACE env var, and the linear fragment path for float
+# framebuffers. Drop when eframe ships on wgpu >= 30 with native
+# SurfaceColorSpace support.
+egui-wgpu = { path = "vendor/egui-wgpu" }

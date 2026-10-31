@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=ShopPhoto
+Comment=Develop Hasselblad RAW photographs
+Exec=shopphoto %f
+Icon=com.shopphoto.ShopPhoto
+Terminal=false
+Categories=Graphics;Photography;
+MimeType=image/x-hasselblad-3fr;image/x-adobe-dng;

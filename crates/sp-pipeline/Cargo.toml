@@ -1,0 +1,32 @@
+[package]
+name = "sp-pipeline"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+sp-core = { workspace = true }
+sp-gpu = { workspace = true }
+serde = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+wgpu = { workspace = true }
+bytemuck = { workspace = true }
+half = { version = "2", features = ["bytemuck"] }
+image = { version = "0.25.10", default-features = false, features = ["tiff"] }
+moxcms = "0.8.1"
+lcms2 = { version = "6.1.1", features = ["static"] }
+
+[dev-dependencies]
+tempfile = "3"
+image = { version = "0.25", default-features = false, features = ["png"] }
+sp-raw = { path = "../sp-raw" }
+# End-to-end Ultra HDR: only a real render proves the PQ rendition carries
+# headroom for the gain map to describe.
+sp-export = { path = "../sp-export" }
+criterion = { version = "0.7", default-features = false, features = ["cargo_bench_support"] }
+
+[[bench]]
+name = "render"
+harness = false

@@ -1,0 +1,466 @@
+<title>ShopPhoto Improvement Plan</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Instrument+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* ── Tokens: dark-first, matching the research notebook palette; light is a considered counterpart ── */
+:root{
+  color-scheme:light;
+  --bg:#f1efea; --panel:#faf9f6; --panel-2:#ecebe6; --line:#d8d5cd; --line-2:#c6c2b8;
+  --text:#1b1d20; --muted:#5c6168; --faint:#8a8f96;
+  --accent:#b46a24; --accent-ink:#8e5218; --accent-soft:rgba(180,106,36,.10);
+  --cyan:#1f8f9c; --cyan-soft:rgba(31,143,156,.12);
+  --green:#3f8a3a; --green-soft:rgba(63,138,58,.12);
+  --red:#c2463f; --red-soft:rgba(194,70,63,.12);
+  --violet:#6b5ea8; --violet-soft:rgba(107,94,168,.12);
+  --code:#8e5218; --shadow:0 10px 30px rgba(30,25,15,.08);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#101315; --panel:#191d20; --panel-2:#22272b; --line:#343a3f; --line-2:#454c52;
+    --text:#f3f0e9; --muted:#abb1b5; --faint:#777f85;
+    --accent:#e6a462; --accent-ink:#f3c590; --accent-soft:rgba(230,164,98,.12);
+    --cyan:#7bd3dd; --cyan-soft:rgba(123,211,221,.13);
+    --green:#9bd18b; --green-soft:rgba(155,209,139,.13);
+    --red:#ec8a85; --red-soft:rgba(236,138,133,.13);
+    --violet:#b3a6ea; --violet-soft:rgba(179,166,234,.13);
+    --code:#f3c590; --shadow:0 16px 36px rgba(0,0,0,.22);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#101315; --panel:#191d20; --panel-2:#22272b; --line:#343a3f; --line-2:#454c52;
+  --text:#f3f0e9; --muted:#abb1b5; --faint:#777f85;
+  --accent:#e6a462; --accent-ink:#f3c590; --accent-soft:rgba(230,164,98,.12);
+  --cyan:#7bd3dd; --cyan-soft:rgba(123,211,221,.13);
+  --green:#9bd18b; --green-soft:rgba(155,209,139,.13);
+  --red:#ec8a85; --red-soft:rgba(236,138,133,.13);
+  --violet:#b3a6ea; --violet-soft:rgba(179,166,234,.13);
+  --code:#f3c590; --shadow:0 16px 36px rgba(0,0,0,.22);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 "Instrument Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--cyan)}
+code{font:.86em/1.4 "IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--code);background:var(--accent-soft);padding:.05em .35em;border-radius:4px}
+.mono{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums}
+
+/* ── Shell ── */
+.shell{display:grid;grid-template-columns:230px minmax(0,1fr);gap:40px;width:min(1180px,calc(100% - 40px));margin:0 auto;padding:44px 0 80px}
+.rail{position:sticky;top:20px;align-self:start;display:flex;flex-direction:column;gap:22px}
+.rail nav{display:flex;flex-direction:column;gap:2px}
+.rail nav a{color:var(--muted);text-decoration:none;padding:6px 10px;border-radius:6px;border-left:2px solid transparent;font-size:.92rem}
+.rail nav a:hover,.rail nav a:focus-visible{color:var(--text);background:var(--panel-2);outline:none}
+.rail .meter{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
+.rail .meter .big{font:500 2rem/1 "IBM Plex Mono",monospace;color:var(--accent);font-variant-numeric:tabular-nums}
+.rail .meter .sub{color:var(--muted);font-size:.82rem;margin-top:4px}
+.bar{height:6px;background:var(--panel-2);border-radius:3px;overflow:hidden;display:flex;margin-top:10px}
+.bar i{display:block;height:100%}
+.legend{display:grid;grid-template-columns:1fr 1fr;gap:4px 10px;margin-top:10px;font-size:.78rem;color:var(--muted)}
+.legend span::before{content:"";display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px;vertical-align:1px;background:var(--dot)}
+
+/* ── Header ── */
+.eyebrow{text-transform:uppercase;letter-spacing:.16em;color:var(--accent);font-weight:600;font-size:.72rem}
+h1{font:400 clamp(2.4rem,5vw,3.6rem)/1.02 "Instrument Serif",Georgia,serif;letter-spacing:-.01em;margin:8px 0 14px;text-wrap:balance}
+h1 em{font-style:italic;color:var(--accent-ink)}
+.lede{color:var(--muted);font-size:1.08rem;max-width:64ch;margin:0 0 8px}
+.meta{color:var(--faint);font-size:.85rem;display:flex;gap:18px;flex-wrap:wrap;margin-top:14px}
+h2{font:400 1.7rem/1.15 "Instrument Serif",Georgia,serif;margin:52px 0 6px;letter-spacing:-.005em;text-wrap:balance}
+h2 + p.sub{color:var(--muted);margin:0 0 18px;max-width:70ch}
+h3{font-size:.95rem;font-weight:600;margin:0 0 6px}
+p{max-width:70ch}
+
+/* ── Snapshot grid ── */
+.snap{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-top:18px}
+.snap .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.snap .card h3{color:var(--accent-ink)}
+.snap ul{margin:0;padding-left:16px;color:var(--muted);font-size:.9rem}
+.snap li{margin:2px 0}
+
+/* ── Filters ── */
+.filters{display:flex;flex-wrap:wrap;gap:6px;margin:18px 0 6px;position:sticky;top:0;background:var(--bg);padding:10px 0;z-index:2}
+.chip{border:1px solid var(--line-2);background:var(--panel);color:var(--muted);border-radius:999px;padding:4px 11px;font:500 .8rem/1.4 "Instrument Sans",sans-serif;cursor:pointer}
+.chip:hover{color:var(--text)}
+.chip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.chip[aria-pressed="true"]{background:var(--text);color:var(--bg);border-color:var(--text)}
+
+/* ── Tracks & items ── */
+.track{margin-top:30px}
+.track-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line-2);padding-bottom:8px;margin-bottom:6px}
+.track-head h3{font:400 1.25rem/1.2 "Instrument Serif",Georgia,serif;margin:0}
+.track-head .count{color:var(--faint);font-size:.8rem}
+.track-head .count b{color:var(--text);font-weight:500}
+.item{display:grid;grid-template-columns:64px minmax(0,1fr) 150px;gap:14px;padding:14px 0;border-bottom:1px solid var(--line);align-items:start}
+.item[hidden]{display:none}
+.item .id{color:var(--faint);font-size:.82rem;padding-top:3px}
+.item .title{font-weight:600;font-size:1rem;margin:0 0 4px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.item .why{color:var(--muted);font-size:.9rem;margin:0}
+.item .why b{color:var(--text);font-weight:500}
+.item .scope{font-size:.9rem;margin:6px 0 0;color:var(--text)}
+.item .scope::before{content:"Scope · ";color:var(--faint);font-size:.75rem;text-transform:uppercase;letter-spacing:.1em}
+.item .note{font-size:.86rem;margin:6px 0 0;color:var(--cyan)}
+.item .note::before{content:"Progress · ";color:var(--faint);font-size:.75rem;text-transform:uppercase;letter-spacing:.1em}
+.item .side{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.tag{display:inline-block;font:500 .72rem/1.5 "IBM Plex Mono",monospace;letter-spacing:.04em;padding:1px 7px;border-radius:4px;border:1px solid var(--line-2);color:var(--muted);white-space:nowrap}
+.tag.p1{border-color:var(--accent);color:var(--accent-ink);background:var(--accent-soft)}
+.status{display:inline-flex;align-items:center;gap:6px;font:500 .76rem/1.6 "Instrument Sans",sans-serif;padding:2px 10px 2px 8px;border-radius:999px;border:1px solid var(--line-2);color:var(--muted);white-space:nowrap}
+.status::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.status.done{color:var(--green);background:var(--green-soft);border-color:transparent}
+.status.progress{color:var(--cyan);background:var(--cyan-soft);border-color:transparent}
+.status.next{color:var(--accent-ink);background:var(--accent-soft);border-color:transparent}
+.status.blocked{color:var(--red);background:var(--red-soft);border-color:transparent}
+.status.external{color:var(--violet);background:var(--violet-soft);border-color:transparent;border-style:dashed}
+.status.planned{color:var(--faint)}
+.item.done .title{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--line-2)}
+
+/* ── Sequencing ── */
+.seq{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin-top:16px}
+.seq .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;box-shadow:var(--shadow)}
+.seq .card .eyebrow{font-size:.68rem}
+.seq .card h3{font:400 1.15rem/1.2 "Instrument Serif",Georgia,serif;margin:4px 0 8px}
+.seq ol{margin:0;padding-left:18px;font-size:.9rem;color:var(--muted)}
+.seq li{margin:3px 0}
+.seq li .mono{color:var(--text);font-size:.8rem}
+
+/* ── Changelog / how-to ── */
+.log{list-style:none;margin:12px 0 0;padding:0;border-left:2px solid var(--line-2)}
+.log li{padding:4px 0 4px 16px;font-size:.92rem;color:var(--muted)}
+.log li .mono{color:var(--accent-ink);margin-right:8px;font-size:.8rem}
+.howto{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin-top:16px;font-size:.92rem}
+.howto p{margin:0 0 8px}
+.howto p:last-child{margin:0}
+pre{overflow-x:auto;font:.82rem/1.5 "IBM Plex Mono",monospace;background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:12px 14px;margin:8px 0 0}
+footer{color:var(--faint);font-size:.82rem;border-top:1px solid var(--line);margin-top:56px;padding-top:16px}
+
+@media (max-width:860px){
+  .shell{grid-template-columns:1fr;gap:20px;width:min(1180px,calc(100% - 28px));padding-top:28px}
+  .rail{position:static}
+  .rail nav{flex-direction:row;flex-wrap:wrap}
+  .item{grid-template-columns:1fr}
+  .item .side{flex-direction:row;flex-wrap:wrap}
+}
+@media (prefers-reduced-motion:no-preference){ .bar i{transition:width .4s ease} }
+</style>
+
+<div class="shell">
+  <aside class="rail">
+    <div class="meter">
+      <div class="big"><span id="pct">0</span>%</div>
+      <div class="sub"><span id="doneCount">0</span> of <span id="total">0</span> items done</div>
+      <div class="bar" id="bar"></div>
+      <div class="legend">
+        <span style="--dot:var(--green)">Done</span>
+        <span style="--dot:var(--cyan)">In progress</span>
+        <span style="--dot:var(--accent)">Up next</span>
+        <span style="--dot:var(--faint)">Planned</span>
+        <span style="--dot:var(--red)">Blocked</span>
+        <span style="--dot:var(--violet)">Needs you</span>
+      </div>
+    </div>
+    <nav aria-label="Sections">
+      <a href="#snapshot">What exists</a>
+      <a href="#plan">The plan</a>
+      <a href="#t-editing">· Editing depth</a>
+      <a href="#t-geometry">· Geometry &amp; lens</a>
+      <a href="#t-library">· Library</a>
+      <a href="#t-export">· Export &amp; output</a>
+      <a href="#t-platform">· Platform &amp; performance</a>
+      <a href="#t-quality">· Quality &amp; release</a>
+      <a href="#sequence">Suggested order</a>
+      <a href="#log">Changelog</a>
+      <a href="#howto">How to update</a>
+    </nav>
+  </aside>
+
+  <main>
+    <header>
+      <div class="eyebrow">ShopPhoto · 0.2.3 · implementation pass 2 Sep 2026</div>
+      <h1>What the editor still needs, <em>and in what order</em></h1>
+      <p class="lede">Phases 0–9 of the build spec are complete and the pipeline is unusually deep for a young editor. The gaps are now in day-to-day editing tools, geometry, the library, and shipping on more than one machine.</p>
+      <div class="meta">
+        <span>Sources: README, BUILD.md, PROGRESS.md, docs/, crate sources</span>
+        <span>Working tree: mixed pre-existing changes preserved; no automatic commit/tag</span>
+      </div>
+    </header>
+
+    <h2 id="snapshot">What exists today</h2>
+    <p class="sub">A compressed inventory of what is built and verified, so the plan below is read against the right baseline.</p>
+    <div class="snap">
+      <div class="card"><h3>RAW &amp; color</h3><ul>
+        <li>3FR/FFF/DNG and most rawler formats; X2D II 100C active-area fix</li>
+        <li>Full GPU develop pipeline, scene-linear Rec.2020 f16</li>
+        <li>Profiles: embedded matrix, Adobe DCP import, Reference Match fitter</li>
+        <li>Luma-invariant chroma-plane color rendering</li>
+        <li>Fuzzed decoder with a structural pre-flight guard</li>
+      </ul></div>
+      <div class="card"><h3>Tone &amp; detail</h3><ul>
+        <li>Exposure, brightness, contrast, H/S/W/B, parametric + RGB point curves</li>
+        <li>8-band Oklab HSL, three-way grading, monochrome mixer</li>
+        <li>Clarity, texture, dehaze, vignette, masked sharpening, deterministic grain</li>
+        <li>Conservative Auto Balance and 11 built-in presets</li>
+        <li>Hot pixels, pre-demosaic NR, NLM luma + Oklab chroma NR, 1:1 loupe</li>
+        <li>AI RAW denoise</li>
+      </ul></div>
+      <div class="card"><h3>Lens &amp; HDR</h3><ul>
+        <li>Per-CFA shading plus radial distortion/lateral-CA coefficients in .splens</li>
+        <li>Two-scale purple/green axial-CA defringe with pickers and Auto</li>
+        <li>macOS EDR display, split before/after, proof spaces</li>
+        <li>PQ export, Ultra HDR JPEG with gain map, hue-preserving shoulder</li>
+      </ul></div>
+      <div class="card"><h3>Export &amp; library</h3><ul>
+        <li>JPEG, TIFF 8/16, PNG 8/16, AVIF; sRGB / P3 / Rec.2020 ICC</li>
+        <li>Five sizing modes, output sharpening, border/PNG watermark, non-blocking batch</li>
+        <li>2×2 exact / 3×3 / 4×4 supersampling</li>
+        <li>SQLite catalog, metadata search/filters, collections, duplicates, XMP</li>
+        <li>20 GB network cache; .spedit snapshots/history and batch settings sync</li>
+      </ul></div>
+      <div class="card"><h3>App &amp; release</h3><ul>
+        <li>Studio Console UI, undo/redo, shortcut sheet, F12 overlay, welcome screen</li>
+        <li>Daily read-only update check</li>
+        <li>Universal macOS DMG, NSIS, AppImage/Flatpak scripts; CI on three OSes</li>
+        <li>250+ tests, golden renders, perf budgets, criterion benches</li>
+      </ul></div>
+    </div>
+
+    <h2 id="plan">The plan</h2>
+    <p class="sub">Every item names the evidence it came from. Priority is what it costs the primary user to live without it; effort is a rough S/M/L for one focused person.</p>
+    <div class="filters" role="group" aria-label="Filter by status">
+      <button class="chip" data-f="all" aria-pressed="true">All</button>
+      <button class="chip" data-f="next" aria-pressed="false">Up next</button>
+      <button class="chip" data-f="progress" aria-pressed="false">In progress</button>
+      <button class="chip" data-f="planned" aria-pressed="false">Planned</button>
+      <button class="chip" data-f="external" aria-pressed="false">Needs you</button>
+      <button class="chip" data-f="blocked" aria-pressed="false">Blocked</button>
+      <button class="chip" data-f="done" aria-pressed="false">Done</button>
+      <button class="chip" data-f="p1" aria-pressed="false">P1 only</button>
+    </div>
+    <div id="tracks"></div>
+
+    <h2 id="sequence">Suggested order</h2>
+    <p class="sub">Three passes. The first is short and removes risk; the second is the single biggest capability gap; the third rounds out a 1.0.</p>
+    <div class="seq" id="seq"></div>
+
+    <h2 id="log">Changelog</h2>
+    <ul class="log" id="logList"></ul>
+
+    <h2 id="howto">How to update this page</h2>
+    <div class="howto">
+      <p>This file is the source of truth and lives in the repo at <code>docs/improvement-plan.html</code>. Everything above is rendered from the <code>PLAN</code> array in the script at the bottom of the file.</p>
+      <p>To record progress, change an item's <code>status</code> to one of <code>planned</code>, <code>next</code>, <code>progress</code>, <code>done</code>, <code>blocked</code>, <code>external</code>, optionally add a <code>note</code>, append a line to <code>CHANGELOG</code>, then republish the artifact from the same file path. The meter, filters and track counts update themselves.</p>
+      <pre>{ id:"A4", status:"done", note:"Shipped in 0.2.3" }</pre>
+    </div>
+    <footer>ShopPhoto 0.2.3 improvement plan · implementation state is recorded below.</footer>
+  </main>
+</div>
+
+<script>
+const TRACKS = [
+  { key:"editing", title:"Editing depth", blurb:"local corrections and reusable edits" },
+  { key:"geometry", title:"Geometry & lens", blurb:"optical and projective correction" },
+  { key:"library", title:"Library", blurb:"find, organize and ingest photographs" },
+  { key:"export", title:"Export & output", blurb:"delivery formats and finishing" },
+  { key:"platform", title:"Platform & performance", blurb:"portable, resilient acceleration" },
+  { key:"quality", title:"Quality & release", blurb:"repeatable verification and shipping" },
+];
+
+const PLAN = [
+  { id:"A1", track:"editing", title:"Local adjustments and masks", priority:"P1", effort:"L", status:"done",
+    why:"Brush, radial, linear-gradient and luminance-range masks persist in sidecars and evaluate on the GPU.",
+    scope:"On-canvas brush and gradient authoring, inversion, feathering and masked local tone/color controls are complete." },
+
+  { id:"A2", track:"editing", title:"Highlight reconstruction", priority:"P1", effort:"M", status:"external",
+    why:"The GPU pass preserves HDR headroom and propagates local color ratios through a 32-pixel reconstruction ring; wide-region and neutral-highlight regressions pass.",
+    scope:"Remaining acceptance is a human visual comparison of real blown skies and speculars against Phocus.",
+    note:"Implementation is complete; the external reference judgement is intentionally not automated." },
+
+  { id:"A3", track:"editing", title:"Spot removal, heal and clone", priority:"P1", effort:"M", status:"done",
+    why:"Circle/stroke healing and cloning persist in sidecars and render as feathered GPU patches.",
+    scope:"On-canvas authoring, automatic source suggestion and visualise-spots view are complete." },
+  { id:"A4", track:"editing", title:"Copy, paste and sync settings across images", priority:"P1", effort:"M", status:"done",
+    why:"Batch export exists but there is no multi-selection or settings sync; each frame of a series is edited by hand.",
+    scope:"Multi-select in grid and filmstrip; copy settings with a checklist of groups; paste to selection and 'sync from active'; writes through sidecars and catalog as one undoable batch." },
+  { id:"A5", track:"editing", title:"History, snapshots and virtual copies", priority:"P2", effort:"M", status:"done",
+    why:"Named snapshots, persistent history and catalog virtual copies retain independent sidecars and restore on reopen.",
+    scope:"The 200-step in-session undo cap remains a deliberate memory bound." },
+  { id:"A6", track:"editing", title:"User presets", priority:"P2", effort:"S", status:"done",
+    why:"Named group-selective presets persist as versioned JSON, appear beside built-ins and have explicit import/export commands.",
+    scope:"Preset exchange validates the versioned schema before installation." },
+  { id:"A7", track:"editing", title:"Capture sharpening with masking", priority:"P2", effort:"M", status:"done",
+    why:"Edge masking, radius-aware halo suppression and an Alt-held mask preview avoid flat-area noise amplification.",
+    scope:"Light deconvolution remains an optional future algorithm, not a 0.2.3 acceptance requirement." },
+  { id:"A8", track:"editing", title:"Lateral chromatic aberration correction", priority:"P2", effort:"M", status:"done",
+    why:"Proxy edge correlation estimates red/blue radial scale against green; manual controls and per-focal .splens coefficients persist.",
+    scope:"Auto-estimate R/B radial scale against G from edge correlation on the proxy; apply as a per-channel resample pre-tone; manual fine sliders; extend .splens to carry fitted coefficients." },
+  { id:"A9", track:"editing", title:"Film grain", priority:"P3", effort:"S", status:"done",
+    why:"No grain stage. Cheap, and it pairs naturally with the monochrome mixer and presets.",
+    scope:"Seeded, size- and roughness-controlled grain applied in the output transform at export resolution so it does not change with zoom." },
+  { id:"A10", track:"editing", title:"Import .cube LUTs as looks", priority:"P3", effort:"S", status:"done",
+    why:"The parser accepts 1D and 3D .cube files, bakes them into the look-LUT slot and exposes saved looks with a strength control.",
+    scope:"Parse .cube (1D/3D), apply in the look-LUT slot with a strength slider, list under presets." },
+
+  // ── Geometry & lens ──
+  { id:"B1", track:"geometry", title:"Lens distortion correction", priority:"P2", effort:"L", status:"done",
+    why:"A clean-room radial model is fitted from user-drawn plumb lines, stored per focal length in .splens and evaluated by the geometry pass.",
+    scope:"User-fitted radial model from a grid or line capture (clean-room, stored in .splens); GPU remap in the geometry stage with crop-to-valid; per-focal-length maps for zooms." },
+  { id:"B2", track:"geometry", title:"Perspective and upright", priority:"P2", effort:"L", status:"done",
+    why:"Manual projective controls, two/four-line guided upright and Sobel-based auto level share the geometry remap.",
+    scope:"Manual vertical, horizontal, rotate, scale and aspect; guided upright from two or four user-drawn lines; auto level from the horizon estimate; shared remap pass with B1." },
+  { id:"B3", track:"geometry", title:"Rotate 90°, vertical flip and aspect presets", priority:"P3", effort:"S", status:"done",
+    why:"Only flip_horizontal and a ±45° straighten exist. Quarter-turn rotation and locked aspect crops are table stakes.",
+    scope:"Add flip_vertical and a quarter-turn field to GeometryParams with sidecar defaults; aspect-lock menu (original, 1:1, 4:5, 3:2, 16:9, custom) in the crop tool." },
+
+  // ── Library ──
+  { id:"C1", track:"library", title:"Keywords, captions and search", priority:"P2", effort:"M", status:"done",
+    why:"Zero hits for keyword, IPTC or search. The catalog can filter by rating, flag and extension only.",
+    scope:"Keyword and caption fields in the sidecar and catalog; text search over filename, keywords and camera/lens; write keywords to XMP alongside ratings." },
+  { id:"C2", track:"library", title:"Color labels and metadata filters", priority:"P2", effort:"M", status:"done",
+    why:"Five labels, keyboard assignment, camera/lens/ISO/date filters and persisted smart collections are available.",
+    scope:"Five labels with keys 6–9; filter bar gains camera, lens, ISO range and date range; save a filter as a smart collection." },
+  { id:"C3", track:"library", title:"File operations", priority:"P2", effort:"M", status:"done",
+    why:"Confirmed rename, move and system-trash workflows include sidecar/XMP companions; hashes flag duplicates and reversible operations retain undo data.",
+    scope:"Move to system trash (with sidecar and XMP), rename with tokens, move between watched folders, content-hash duplicate flagging; all confirmed and undoable where the OS allows." },
+  { id:"C4", track:"library", title:"Card import", priority:"P2", effort:"M", status:"done",
+    why:"The import workflow detects removable volumes, copies to primary and backup destinations, renames, applies presets, de-duplicates and supports progress cancellation.",
+    scope:"Import dialog: source volume detection, destination + backup, rename pattern, apply preset on import, skip duplicates by hash, progress with cancel." },
+  { id:"C5", track:"library", title:"GPS and map view", priority:"P3", effort:"M", status:"done",
+    why:"Coordinates can be shown, edited and cleared, plotted without online tiles and written to XMP.",
+    scope:"Show coordinates in the metadata panel; offline tile-free map (simple plot) is optional; write/clear GPS in XMP." },
+
+  // ── Export & output ──
+  { id:"D1", track:"export", title:"JPEG XL in the default build", priority:"P2", effort:"M", status:"done",
+    why:"The default pure-Rust gamut-jxl encoder supports lossy/lossless 16-bit SDR with ICC/EXIF and HDR PQ, with round-trip tests and packaged UI controls.",
+    scope:"Decide between jpegxl-rs (libjxl, needs cmake in CI on three OSes) and a pure-Rust encoder; wire HDR (PQ) and lossless modes; add to packaging and CI." },
+  { id:"D2", track:"export", title:"Watermark and border on export", priority:"P3", effort:"S", status:"done",
+    why:"PNG watermark and solid-border controls are available in the export dialog.",
+    scope:"Position, opacity, scale and border color/width render at final size after output sharpening." },
+  { id:"D3", track:"export", title:"Custom ICC proof spaces", priority:"P3", effort:"M", status:"done",
+    why:"Display-class RGB ICC profiles are validated, baked into a 33-cube proof transform and applied in the output stage with gamut warning.",
+    scope:"Load a display-class ICC (matrix/TRC and LUT), build the proof transform on CPU, apply in the output stage with gamut warning." },
+
+  // ── Platform & performance ──
+  { id:"E1", track:"platform", title:"Commit sessions 16–19", priority:"P1", effort:"S", status:"blocked",
+    why:"The accumulated sessions and 0.2.3 work are now reviewed and committed in logical source, pipeline and app/release groups.",
+    scope:"The exact source tree used for the already-shipped 0.2.2 DMG was never committed and cannot be reconstructed byte-for-byte, so creating a 0.2.2 tag now would be false provenance.",
+    note:"No historical tag was fabricated; 0.2.3 is the first fully auditable state after that gap." },
+  { id:"E4", track:"platform", title:"HDR display on Windows (scRGB swapchain)", priority:"P2", effort:"L", status:"done",
+    why:"Windows opts into the float surface, queries IDXGIOutput6 for luminance/headroom and reuses the scRGB blit; PQ export remains available everywhere.",
+    scope:"Float surface + colorspace selection on DX12; headroom query; reuse the scRGB blit; Linux stays export-only until Wayland color management settles (open question in BUILD.md §9)." },
+  { id:"E5", track:"platform", title:"GPU device-lost recovery", priority:"P2", effort:"M", status:"done",
+    why:"A one-shot wgpu device-loss monitor flushes sidecar state and relaunches the active image, recreating the surface, context, pipelines and uploads with a two-attempt guard.",
+    scope:"Detect the lost device, recreate context and pipelines, re-upload the open image, re-render; a test that simulates loss through the wgpu error scope." },
+  { id:"E6", track:"platform", title:"Close the Phase 8 hotspot list", priority:"P3", effort:"M", status:"done",
+    why:"BUILD.md lists ten measured hotspots (viewport-driven proxy size, quarter-texture residency, buffer pooling, startup profile loading). Several were addressed in passing; none were ticked off.",
+    scope:"Audit each item against the current renderer, measure with the F12 overlay, close or document. Record numbers in docs/phase-8.md." },
+  { id:"E7", track:"platform", title:"Cross-machine performance acceptance", priority:"P2", effort:"S", status:"external",
+    why:"The §1 budgets were only ever measured on this Mac. Phase 8 acceptance names M1 Pro, RTX 3060 and a Ryzen iGPU.",
+    scope:"Run the strict perf budget test and a real-file open/edit/export on each machine; record in docs/phase-8.md." },
+
+  // ── Quality & release ──
+  { id:"F1", track:"quality", title:"Visual regression harness in CI", priority:"P2", effort:"M", status:"done",
+    why:"CI combines GPU golden tests and shader contracts with a deterministic full-window screenshot, committed reference and RMSE/changed-pixel comparator on macos-14.",
+    scope:"Failure artifacts are uploaded for visual review." },
+  { id:"F2", track:"quality", title:"Fix documentation drift", priority:"P2", effort:"S", status:"done",
+    why:"docs/file-formats.md still says EDR preview awaits wgpu 30 (it has been live since session 11); README's status paragraph stops at Phase 9.",
+    scope:"Correct the documents, add a known-limitations section, and make PROGRESS.md's head a short pointer to this plan instead of a session narrative." },
+  { id:"F3", track:"quality", title:"Upstream the rawler patches", priority:"P2", effort:"M", status:"external",
+    why:"Current dnglab 0.8.0 branches were tested and submitted as PRs #837 (X2D II), #838 (Phocus FFF) and #839 (JFIF loop). Upstream already fixed non-ASCII Value::get_string in 3740e41b.",
+    scope:"The app-level allocation preflight remains local because upstream explicitly does not promise safe untrusted decoding. Drop vendor/ after the open PRs merge and a compatible rawler release ships." },
+  { id:"F4", track:"quality", title:"Reference Match on real Phocus TIFFs", priority:"P1", effort:"S", status:"external",
+    why:"The fitter is complete and tested on synthetic data, but the fixture folder has never held neutral Phocus exports. Acceptance is mean holdout ΔE00 below 2.0.",
+    scope:"Export 3–10 varied RAWs from Phocus as neutral 16-bit TIFF, run the wizard, record the ΔE and keep the profile." },
+  { id:"F5", track:"quality", title:"By-eye EDR and Ultra HDR confirmation", priority:"P2", effort:"S", status:"external",
+    why:"--hdr-check passes with ×16 headroom, but nobody has judged an HDR edit on the XDR panel, and no phone or browser has displayed the Ultra HDR boost.",
+    scope:"One session on the XDR panel with a bright-specular frame; open an exported Ultra HDR JPEG on an Android phone and in Chrome; note results in docs/interop-xmp-ultrahdr.md." },
+  { id:"F6", track:"quality", title:"Signing and notarization credentials", priority:"P2", effort:"S", status:"external",
+    why:"Release CI is wired for Developer ID and notarytool but the secrets are empty; Windows signing has no certificate. Builds are ad-hoc signed.",
+    scope:"Obtain an Apple Developer ID and a Windows code-signing certificate; populate the GitHub secrets; cut a tagged release through the workflow." },
+  { id:"F7", track:"quality", title:"Fuzzing cadence", priority:"P3", effort:"S", status:"done",
+    why:"Each fuzz run so far found something; the corpus is local and the run is manual. PROGRESS.md calls it a process, not a task.",
+    scope:"Nightly or on-decoder-change fuzz job with the seeded corpus; artifacts uploaded; a short triage note per finding." },
+  { id:"F8", track:"quality", title:"Accessibility and localization scaffold", priority:"P3", effort:"M", status:"done",
+    why:"AccessKit is enabled, focus/contrast/target-size behavior is audited, UI scale persists and parity-tested English/Dutch JSON catalogs provide a single translation table.",
+    scope:"Audit every control for keyboard reach and focus visibility; UI scale setting; route strings through a single table so a second language is a file, not a refactor." },
+];
+
+const SEQUENCE = [
+  { eyebrow:"Pass 1 · remove risk", title:"Housekeeping and two quick wins", items:["E1","F2","A4","F4","A2"] },
+  { eyebrow:"Pass 2 · the big gap", title:"Local editing", items:["A1","A3","A6","A7"] },
+  { eyebrow:"Pass 3 · toward 1.0", title:"Geometry, library, other platforms", items:["B1","B2","C1","C3","C4","F1","F3","E4","E5","F6"] },
+];
+
+const CHANGELOG = [
+  { date:"2026-09-02", text:"Plan created from a survey of the repository at 0.2.2 (session 19 state)." },
+  { date:"2026-09-02", text:"A2 moved to in progress: ratio-based reconstruction already exists in wb_color.wgsl; scope narrowed to wide-region fill, a user control and real-file validation." },
+  { date:"2026-09-02", text:"0.2.3 implementation pass: settings sync, user presets, persistent history/snapshots, metadata search, geometry, masked sharpening, grain, lens distortion/CA, export finishing, localization scaffold and scheduled fuzzing landed; incomplete and external gates remain explicitly open." },
+  { date:"2026-09-03", text:"Implementation audit completed: JPEG XL, ICC proofing, portable ONNX inference, Windows scRGB, device-loss recovery and visual CI landed; all implemented items pass workspace tests and strict Clippy. Real camera decode/render/export and M5 Pro strict budgets passed. External model, hardware, signing and human visual gates remain explicit." },
+  { date:"2026-09-03", text:"Rawler changes rebased onto dnglab 0.8.0 and submitted as upstream PRs #837, #838 and #839; non-ASCII TIFF handling was already fixed upstream." },
+];
+
+// ── Render ──
+const STATUS_LABEL = { planned:"Planned", next:"Up next", progress:"In progress", done:"Done", blocked:"Blocked", external:"Needs you" };
+const byId = Object.fromEntries(PLAN.map(p => [p.id, p]));
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function renderTracks(){
+  const root = document.getElementById("tracks");
+  root.innerHTML = TRACKS.map(t => {
+    const items = PLAN.filter(p => p.track === t.key);
+    const done = items.filter(p => p.status === "done").length;
+    return `<section class="track" id="t-${t.key}">
+      <div class="track-head"><h3>${esc(t.title)}</h3><span class="count"><b>${done}</b> / ${items.length} done · ${esc(t.blurb)}</span></div>
+      ${items.map(p => `<article class="item ${p.status}" data-status="${p.status}" data-priority="${p.priority.toLowerCase()}">
+        <div class="id mono">${p.id}</div>
+        <div>
+          <p class="title">${esc(p.title)}</p>
+          <p class="why">${esc(p.why)}</p>
+          ${p.scope ? `<p class="scope">${esc(p.scope)}</p>` : ""}
+          ${p.note ? `<p class="note">${esc(p.note)}</p>` : ""}
+        </div>
+        <div class="side">
+          <span class="status ${p.status}">${STATUS_LABEL[p.status] || p.status}</span>
+          <span><span class="tag ${p.priority.toLowerCase()}">${p.priority}</span> <span class="tag">${p.effort}</span></span>
+        </div>
+      </article>`).join("")}
+    </section>`;
+  }).join("");
+}
+
+function renderMeter(){
+  const total = PLAN.length;
+  const counts = {};
+  PLAN.forEach(p => counts[p.status] = (counts[p.status]||0) + 1);
+  const done = counts.done || 0;
+  document.getElementById("total").textContent = total;
+  document.getElementById("doneCount").textContent = done;
+  document.getElementById("pct").textContent = Math.round(100 * done / total);
+  const order = [["done","var(--green)"],["progress","var(--cyan)"],["next","var(--accent)"],["planned","var(--line-2)"],["blocked","var(--red)"],["external","var(--violet)"]];
+  document.getElementById("bar").innerHTML = order.map(([k,c]) => `<i style="width:${100*(counts[k]||0)/total}%;background:${c}" title="${STATUS_LABEL[k]}: ${counts[k]||0}"></i>`).join("");
+}
+
+function renderSequence(){
+  document.getElementById("seq").innerHTML = SEQUENCE.map(s => `<div class="card">
+    <div class="eyebrow">${esc(s.eyebrow)}</div><h3>${esc(s.title)}</h3>
+    <ol>${s.items.map(id => { const p = byId[id]; return p ? `<li><span class="mono">${id}</span> ${esc(p.title)}${p.status==="done" ? " ✓" : ""}</li>` : ""; }).join("")}</ol>
+  </div>`).join("");
+}
+
+function renderLog(){
+  document.getElementById("logList").innerHTML = CHANGELOG.slice().reverse().map(e => `<li><span class="mono">${esc(e.date)}</span>${esc(e.text)}</li>`).join("");
+}
+
+function wireFilters(){
+  const chips = [...document.querySelectorAll(".chip")];
+  let current = "all";
+  try { current = localStorage.getItem("sp-plan-filter") || "all"; } catch(e){}
+  const apply = () => {
+    chips.forEach(c => c.setAttribute("aria-pressed", String(c.dataset.f === current)));
+    document.querySelectorAll(".item").forEach(el => {
+      const show = current === "all" || (current === "p1" ? el.dataset.priority === "p1" : el.dataset.status === current);
+      el.hidden = !show;
+    });
+    document.querySelectorAll(".track").forEach(t => { t.hidden = ![...t.querySelectorAll(".item")].some(i => !i.hidden); });
+  };
+  chips.forEach(c => c.addEventListener("click", () => { current = c.dataset.f; try { localStorage.setItem("sp-plan-filter", current); } catch(e){} apply(); }));
+  apply();
+}
+
+renderTracks(); renderMeter(); renderSequence(); renderLog(); wireFilters();
+</script>

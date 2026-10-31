@@ -1,0 +1,53 @@
+[package]
+name = "sp-app"
+default-run = "shopphoto"
+description = "ShopPhoto application binary: UI, panels, viewport"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[features]
+native-codecs = ["sp-raw/native-codecs"]
+
+[[bin]]
+name = "shopphoto"
+path = "src/main.rs"
+
+[dependencies]
+sp-core = { workspace = true }
+sp-raw = { workspace = true }
+sp-gpu = { workspace = true }
+sp-pipeline = { workspace = true }
+sp-export = { workspace = true }
+sp-catalog = { workspace = true }
+sp-ai = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+crossbeam-channel = { workspace = true }
+bytemuck = { workspace = true }
+blake3 = "1"
+base64 = "0.22"
+eframe = { version = "0.35", default-features = false, features = ["wgpu", "default_fonts", "wayland", "x11", "accesskit"] }
+egui = "0.35"
+rfd = "0.17.2"
+dirs = "6"
+image = { version = "0.25", default-features = false, features = ["png", "tiff"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tempfile = "3"
+semver = "1"
+ureq = { version = "3", default-features = false, features = ["rustls", "json"] }
+
+[target.'cfg(target_os="macos")'.dependencies]
+objc2 = "0.6"
+objc2-app-kit = { version = "0.3", default-features = false, features = ["std", "NSApplication", "NSResponder"] }
+objc2-foundation = { version = "0.3", default-features = false, features = ["std", "NSArray", "NSObject", "NSString", "NSURL", "NSAppleEventDescriptor", "NSAppleEventManager", "objc2-core-services"] }
+winit = { version = "0.30", default-features = false, features = ["rwh_06"] }
+
+[target.'cfg(target_os="windows")'.dependencies]
+windows = { version = "0.62", features = ["Win32_Graphics_Dxgi", "Win32_Graphics_Dxgi_Common", "Win32_Graphics_Gdi", "Win32_Foundation"] }
+
+[dev-dependencies]
+tempfile = "3"

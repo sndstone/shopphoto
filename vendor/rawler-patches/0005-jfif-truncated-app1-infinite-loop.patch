@@ -1,0 +1,17 @@
+--- a/rawler/src/formats/jfif.rs
++++ b/rawler/src/formats/jfif.rs
+@@ -232,7 +232,13 @@
+           Ok(app1) => Segment::APP1 { offset: pos, app1 },
+           Err(err) => {
+             log::warn!("Failed to read APP1 (EXIF) segement, maybe corrupt: {:?}", err);
+-            continue;
++            // ShopPhoto vendored patch: `continue` re-enters the loop with
++            // `sym` still 0xFFE1 and the reader unmoved, so a truncated APP1
++            // segment spins forever (found by fuzzing: the five bytes
++            // `FF D8 FF E1 33` hang the parser). The segment length is what
++            // failed to read, so there is nothing to skip past — stop and
++            // return the segments collected so far.
++            break;
+           }
+         },
+         0xFFDA => Segment::SOS {

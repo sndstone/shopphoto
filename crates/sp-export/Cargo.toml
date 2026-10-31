@@ -1,0 +1,33 @@
+[package]
+name = "sp-export"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+sp-core = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+image = { version = "0.25.10", default-features = false, features = ["jpeg", "png", "tiff", "avif", "webp"] }
+tiff = { version = "0.11.3", features = ["deflate"] }
+jpeg-encoder = "0.6.1"
+ravif = "0.13.0"
+avif-serialize = "0.8.9"
+moxcms = "0.8.1"
+lcms2 = { version = "6.1.1", features = ["static"] }
+webp = { version = "0.3.1", default-features = false }
+ab_glyph = "0.2"
+epaint_default_fonts = "0.35"
+crc32fast = "1"
+gamut-core = "2.0.1"
+gamut-jxl = { version = "0.4.0", default-features = false, features = ["encode"] }
+
+tempfile = "3"
+
+[dev-dependencies]
+lopdf = { version = "0.38", default-features = false }
+kamadak-exif = "0.6.1"
+gamut-jxl = { version = "0.4.0", default-features = false, features = ["decode"] }

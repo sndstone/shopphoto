@@ -1,0 +1,14 @@
+--- a/rawler/data/cameras/hasselblad/x2d_100c.toml
++++ b/rawler/data/cameras/hasselblad/x2d_100c.toml
+@@ -9,6 +9,11 @@
+   ["Hasselblad X2D 100C", "X2D 100C"],
+   ["Hasselblad CFV 100C", "CFV 100C"],
+   ["CFV 100C/907X", "CFV 100C"],
++  # ShopPhoto vendored patch: X2D II 100C shares the X2D 100C sensor and
++  # uncompressed 3FR layout; color matrix is the X2D 100C one (close
++  # approximation) until upstream dnglab ships a dedicated definition.
++  ["X2D II 100C", "X2D II 100C"],
++  ["Hasselblad X2D II 100C", "X2D II 100C"],
+ ]
+ 
+ [cameras.color_matrix]

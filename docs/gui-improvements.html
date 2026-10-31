@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ShopPhoto GUI improvements: before and after</title>
+<style>
+/* Page tokens. The page is dark on purpose: every mock reproduces the
+   dark-only ShopPhoto UI (crates/sp-app/src/theme.rs) and should be judged
+   against the same surround. */
+:root {
+  color-scheme: dark;
+  --bg: #0d0e10;
+  --page-panel: #15171a;
+  --page-line: #2a2e33;
+  --text: #eceded;
+  --muted: #a7adb4;
+  --faint: #7c838b;
+  --before: #e8a84c;
+  --after: #6fd18d;
+  --link: #7cb0ff;
+  /* ShopPhoto design tokens, copied verbatim from theme.rs */
+  --sp-window: #141517;
+  --sp-panel: #1b1d20;
+  --sp-card: #222529;
+  --sp-raised: #2a2e33;
+  --sp-hover: #32373c;
+  --sp-hair: #303439;
+  --sp-t1: #ecedee;
+  --sp-t2: #9ca3ab;
+  --sp-t3: #8a919b;
+  --sp-acc: #5394ff;
+  --sp-acc-hover: #74a9ff;
+  --sp-on-acc: #0c121e;
+  --sp-warn: #e8a84c;
+  --sp-err: #e85c48;
+  --sp-vp: #101112;
+  --sp-ok: #5fcf86;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: 16px; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--link); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+code, .mono { font: 0.86em/1.4 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+code { background: rgba(255,255,255,.06); padding: .08em .35em; border-radius: 4px; overflow-wrap: anywhere; }
+kbd {
+  display: inline-block; min-width: 1.6em; padding: 0 .4em; text-align: center;
+  font: 600 11.5px/1.7 ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--sp-t1); background: var(--sp-raised); border: 1px solid #454b53;
+  border-bottom-width: 2px; border-radius: 5px;
+}
+h1, h2, h3 { line-height: 1.2; margin: 0; }
+.shell { width: min(1320px, calc(100% - 32px)); margin: 0 auto; padding: 40px 0 96px; }
+
+/* ---------- header ---------- */
+.masthead { display: grid; gap: 10px; margin-bottom: 28px; }
+.eyebrow { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--faint); }
+.masthead h1 { font-size: clamp(28px, 4vw, 40px); letter-spacing: -.01em; }
+.masthead h1 span { color: var(--sp-acc); }
+.lede { max-width: 860px; color: var(--muted); font-size: 16.5px; margin: 0; }
+.meta { font-size: 13px; color: var(--faint); }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 13px; color: var(--muted); margin-top: 6px; }
+.legend b { color: var(--text); font-weight: 600; }
+
+/* ---------- overview screenshot with hotspots ---------- */
+.overview { background: var(--page-panel); border: 1px solid var(--page-line); border-radius: 14px; padding: 18px; margin: 28px 0 36px; }
+.overview h2 { font-size: 18px; margin-bottom: 4px; }
+.overview p { margin: 0 0 14px; color: var(--muted); font-size: 14px; }
+.shot { position: relative; border-radius: 8px; overflow: hidden; border: 1px solid #000; }
+.shot img { display: block; width: 100%; height: auto; }
+.hot {
+  position: absolute; transform: translate(-50%, -50%);
+  width: 26px; height: 26px; border-radius: 50%;
+  display: grid; place-items: center;
+  font: 700 12px/1 -apple-system, sans-serif; color: #111; background: var(--before);
+  border: 2px solid #111; box-shadow: 0 0 0 3px rgba(232,168,76,.35), 0 4px 12px rgba(0,0,0,.6);
+  text-decoration: none; cursor: pointer; transition: transform .15s ease;
+}
+.hot:hover, .hot:focus-visible { transform: translate(-50%, -50%) scale(1.18); outline: none; }
+.hot::after {
+  content: attr(data-title); position: absolute; left: 50%; top: calc(100% + 8px); transform: translateX(-50%);
+  white-space: nowrap; background: rgba(12,13,15,.95); color: var(--text); font-weight: 500; font-size: 12px;
+  padding: 5px 9px; border-radius: 6px; border: 1px solid var(--page-line); opacity: 0; pointer-events: none;
+  transition: opacity .12s ease;
+}
+.hot:hover::after, .hot:focus-visible::after { opacity: 1; }
+.hot.left::after { left: 0; transform: none; }
+.hot.right::after { left: auto; right: 0; transform: none; }
+
+/* ---------- summary table ---------- */
+.summary { margin: 0 0 44px; }
+.summary h2 { font-size: 18px; margin-bottom: 12px; }
+.summary table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.summary th, .summary td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--page-line); vertical-align: top; }
+.summary th { color: var(--faint); font-weight: 600; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; }
+.summary td:first-child { color: var(--faint); font-variant-numeric: tabular-nums; width: 38px; }
+.summary td a { color: var(--text); text-decoration: none; }
+.summary td a:hover { color: var(--link); text-decoration: underline; }
+.pill { display: inline-block; font-size: 11.5px; font-weight: 600; padding: 1px 8px; border-radius: 999px; white-space: nowrap; }
+.pill.hi { background: rgba(111,209,141,.14); color: var(--after); }
+.pill.md { background: rgba(124,176,255,.14); color: var(--link); }
+.pill.lo { background: rgba(255,255,255,.07); color: var(--muted); }
+.pill.eff { background: rgba(255,255,255,.05); color: var(--muted); font-weight: 500; }
+.order { margin-top: 16px; font-size: 14px; color: var(--muted); }
+.order b { color: var(--text); }
+
+/* ---------- sections and items ---------- */
+.group-title { display: flex; align-items: baseline; gap: 12px; margin: 56px 0 18px; padding-bottom: 10px; border-bottom: 1px solid var(--page-line); }
+.group-title h2 { font-size: 24px; }
+.group-title span { color: var(--faint); font-size: 14px; }
+.item { background: var(--page-panel); border: 1px solid var(--page-line); border-radius: 14px; padding: 22px 22px 18px; margin-bottom: 26px; }
+.item-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-bottom: 10px; }
+.num { font: 700 13px/1 ui-monospace, Menlo, monospace; color: var(--bg); background: var(--text); border-radius: 6px; padding: 5px 7px; }
+.item h3 { font-size: 19px; flex: 1 1 380px; }
+.why { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 8px 28px; margin-bottom: 16px; }
+.why p { margin: 0 0 6px; color: var(--muted); font-size: 14.5px; }
+.why p b { color: var(--text); font-weight: 600; }
+.why ul { margin: 0; padding-left: 18px; color: var(--muted); font-size: 14px; }
+.why li { margin: 2px 0; }
+.why li::marker { color: var(--after); }
+.src { font: 12px/1.5 ui-monospace, Menlo, monospace; color: var(--faint); margin-top: 6px !important; }
+@media (max-width: 900px) { .why { grid-template-columns: 1fr; } }
+
+.compare { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 1100px) { .compare { grid-template-columns: 1fr; } }
+.pane { border-radius: 12px; border: 1px solid var(--page-line); background: #0a0b0c; overflow: hidden; display: flex; flex-direction: column; }
+.pane-label { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 12px; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; border-bottom: 1px solid var(--page-line); }
+.pane.before .pane-label { color: var(--before); }
+.pane.after .pane-label { color: var(--after); }
+.pane-label em { font-style: normal; font-weight: 500; letter-spacing: 0; text-transform: none; color: var(--faint); font-size: 12px; }
+.stage { position: relative; padding: 14px; flex: 1; display: flex; flex-direction: column; gap: 10px; outline: none; }
+.pane.keys .pane-label em::before {
+  content: "keyboard active"; margin-right: 8px; font-size: 10.5px; letter-spacing: .04em; text-transform: none;
+  color: var(--sp-acc); background: rgba(83,148,255,.12); border: 1px solid rgba(83,148,255,.35); padding: 1px 7px; border-radius: 999px;
+}
+.hint { margin: 0; padding: 9px 12px 11px; border-top: 1px solid var(--page-line); font-size: 12.5px; color: var(--faint); }
+.hint b { color: var(--muted); font-weight: 600; }
+
+/* ---------- ShopPhoto mock primitives (scoped to .app) ---------- */
+.app { font: 12.5px/1.35 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: var(--sp-t1); user-select: none; -webkit-user-select: none; }
+.app input, .app button { font: inherit; }
+.app .panel { background: var(--sp-panel); }
+.app .card { background: var(--sp-card); border: 1px solid var(--sp-hair); border-radius: 6px; padding: 9px 12px; }
+.app .section { font-size: 10.5px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--sp-t3); }
+.app .btn {
+  appearance: none; border: 1px solid var(--sp-hair); background: var(--sp-raised); color: var(--sp-t1);
+  border-radius: 5px; padding: 5px 11px; min-height: 28px; cursor: pointer; font-size: 12.5px; white-space: nowrap;
+}
+.app .btn:hover { background: var(--sp-hover); border-color: #41474f; }
+.app .btn.small { min-height: 22px; padding: 2px 8px; font-size: 11.5px; }
+.app .btn.primary { background: var(--sp-acc); color: var(--sp-on-acc); border-color: var(--sp-acc); font-weight: 600; }
+.app .btn.primary:hover { background: var(--sp-acc-hover); }
+.app .btn.pill { border-radius: 14px; border-color: transparent; }
+.app .btn.ghost { background: transparent; border-color: transparent; }
+.app .btn.ghost:hover { background: var(--sp-hover); }
+.app .btn.on { background: rgba(83,148,255,.22); border-color: var(--sp-acc); }
+.app .btn:disabled { opacity: .45; cursor: default; }
+.app .sel { display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 5px; cursor: pointer; color: var(--sp-t1); }
+.app .sel:hover { background: var(--sp-hover); }
+.app .sel.on { background: rgba(83,148,255,.35); }
+.app .combo {
+  display: inline-flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 110px;
+  background: var(--sp-raised); border: 1px solid var(--sp-hair); border-radius: 5px; padding: 4px 9px; cursor: pointer; white-space: nowrap;
+}
+.app .combo::after { content: "▼"; font-size: 9px; color: var(--sp-t1); }
+.app .field { background: var(--sp-vp); border: 1px solid var(--sp-hair); border-radius: 5px; color: var(--sp-t1); padding: 4px 8px; min-height: 26px; outline: none; }
+.app .field:focus { border-color: var(--sp-acc); }
+.app .field::placeholder { color: #6c737c; }
+.app .muted { color: var(--sp-t2); }
+.app .faint { color: var(--sp-t3); }
+.app .tiny { font-size: 10.5px; }
+.app .row { display: flex; align-items: center; gap: 8px; }
+.app .col { display: flex; flex-direction: column; gap: 7px; }
+.app .spacer { flex: 1; }
+.app .topbar { height: 40px; display: flex; align-items: center; gap: 8px; padding: 0 10px; background: var(--sp-panel); border-bottom: 1px solid var(--sp-hair); border-radius: 8px 8px 0 0; }
+.app .brand { font-weight: 700; font-size: 14.5px; letter-spacing: -.01em; }
+.app .brand span { color: var(--sp-acc); }
+.app .viewport { position: relative; background: var(--sp-vp); overflow: hidden; }
+.app .viewport img { display: block; pointer-events: none; -webkit-user-drag: none; }
+.app .kbd { font: 600 10.5px/1 ui-monospace, Menlo, monospace; border: 1px solid #4a5058; border-bottom-width: 2px; border-radius: 4px; padding: 2px 5px; color: var(--sp-t1); background: rgba(255,255,255,.04); }
+.app .menu { position: absolute; z-index: 20; background: var(--sp-card); border: 1px solid var(--sp-hair); border-radius: 7px; padding: 6px; box-shadow: 0 6px 24px rgba(0,0,0,.55); min-width: 200px; }
+.app .menu .mi { padding: 5px 9px; border-radius: 5px; cursor: pointer; display: flex; justify-content: space-between; gap: 18px; }
+.app .menu .mi:hover { background: var(--sp-hover); }
+.app .sim { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 11.5px; color: var(--faint); padding-top: 4px; border-top: 1px dashed #2b2f34; }
+.app .sim b { font-weight: 600; color: var(--muted); margin-right: 2px; }
+
+/* egui-like slider (the current look) */
+.eg-row { display: grid; grid-template-columns: 76px minmax(60px, 1fr) 58px; align-items: center; gap: 8px; height: 26px; }
+.eg-label { position: relative; text-align: center; color: var(--sp-t2); font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: default; padding-right: 6px; }
+.eg-dot { position: absolute; right: 2px; top: 50%; width: 3.6px; height: 3.6px; margin-top: -1.8px; border-radius: 50%; background: var(--sp-acc); display: none; }
+.eg-row.mod .eg-dot { display: block; }
+.eg-track { position: relative; height: 20px; cursor: pointer; }
+.eg-track::before { content: ""; position: absolute; left: 0; right: 0; top: 7px; height: 6px; border-radius: 3px; background: var(--sp-raised); }
+.eg-fill { position: absolute; left: 0; top: 7px; height: 6px; border-radius: 3px; background: #2f4a73; }
+.eg-handle { position: absolute; top: 1px; width: 13px; height: 18px; margin-left: -6.5px; border-radius: 6px; background: var(--sp-raised); border: 1.2px solid var(--sp-t1); }
+.eg-value { background: var(--sp-raised); border-radius: 4px; text-align: center; font-size: 12px; padding: 2px 0; font-variant-numeric: tabular-nums; cursor: ew-resize; }
+
+/* proposed slider */
+.sl-row { display: grid; grid-template-columns: 80px minmax(60px, 1fr) 64px 16px; align-items: center; gap: 8px; height: 26px; }
+.sl-label { color: var(--sp-t2); font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: ew-resize; border-radius: 4px; padding: 1px 3px; margin-left: -3px; }
+.sl-label:hover { background: rgba(255,255,255,.05); color: var(--sp-t1); }
+.sl-row.mod .sl-label { color: var(--sp-t1); }
+.sl-track { position: relative; height: 20px; cursor: pointer; touch-action: none; }
+.sl-rail { position: absolute; left: 0; right: 0; top: 8px; height: 4px; border-radius: 2px; background: #33383e; }
+.sl-track.grad .sl-rail { height: 6px; top: 7px; opacity: .9; }
+.sl-zero { position: absolute; top: 4px; width: 1px; height: 12px; background: #5a616a; }
+.sl-fill { position: absolute; top: 8px; height: 4px; border-radius: 2px; background: var(--sp-acc); }
+.sl-track.grad .sl-fill { display: none; }
+.sl-thumb { position: absolute; top: 3px; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%; background: #f3f4f5; box-shadow: 0 1px 3px rgba(0,0,0,.6); transition: transform .12s ease; outline: none; }
+.sl-thumb:focus-visible { box-shadow: 0 0 0 3px rgba(83,148,255,.55), 0 1px 3px rgba(0,0,0,.6); }
+.sl-track:hover .sl-thumb, .sl-track.dragging .sl-thumb { transform: scale(1.15); }
+.sl-value { width: 64px; text-align: right; background: transparent; border: 1px solid transparent; border-radius: 4px; color: var(--sp-t2); font-size: 12px; font-variant-numeric: tabular-nums; padding: 2px 5px; outline: none; }
+.sl-value:hover { border-color: var(--sp-hair); }
+.sl-value:focus { border-color: var(--sp-acc); background: var(--sp-vp); color: var(--sp-t1); }
+.sl-row.mod .sl-value { color: var(--sp-acc-hover); }
+.sl-reset { width: 16px; height: 16px; padding: 0; border: 0; background: transparent; color: var(--sp-t3); cursor: pointer; opacity: 0; border-radius: 3px; font-size: 12px; line-height: 16px; }
+.sl-row.mod:hover .sl-reset { opacity: 1; }
+.sl-reset:hover { color: var(--sp-t1); background: var(--sp-hover); }
+.sl-row.flash .sl-thumb { transition: left .18s ease; }
+.sl-row.flash .sl-fill { transition: left .18s ease, width .18s ease; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0s !important; animation-duration: 0s !important; scroll-behavior: auto !important; }
+}
+
+footer { margin-top: 56px; color: var(--faint); font-size: 13px; border-top: 1px solid var(--page-line); padding-top: 18px; }
+</style>
+<link rel="stylesheet" href="gui-improvements/demos.css">
+</head>
+<body>
+<div class="shell">
+
+<header class="masthead">
+  <div class="eyebrow">ShopPhoto 0.3.0 · GUI review · 27 September 2026</div>
+  <h1>18 GUI improvements, <span>before and after</span></h1>
+  <p class="lede">A pass over the egui front end in <code>crates/sp-app</code>: the top bar, viewport, develop inspector, library, filmstrip and feedback surfaces. Every item has a working <b style="color:var(--before)">before</b> mock that reproduces current behaviour from the code, and an <b style="color:var(--after)">after</b> mock of the proposal. Drag, click, hover and type in both. Keyboard shortcuts go to whichever mock you last pointed at.</p>
+  <div class="meta">Source: working tree on top of <code>d2dbca1</code>, uncommitted changes included. The screenshot below was taken from a release build of that tree with the app's <code>SP_SCREENSHOT</code> hook on <code>x1d-ii-xcd45p-01.fff</code>. The mocks use the real colour tokens from <code>theme.rs</code>.</div>
+  <div class="legend">
+    <span><span class="pill hi">High</span> <span class="pill md">Medium</span> <span class="pill lo">Low</span> impact on everyday editing</span>
+    <span><b>Effort</b> S ≈ a day or less, M ≈ a few days, L ≈ a week or more</span>
+  </div>
+</header>
+
+<section class="overview" aria-labelledby="ov-h">
+  <h2 id="ov-h">The current Develop screen</h2>
+  <p>Numbered markers show where each improvement applies. Click one to jump to it.</p>
+  <div class="shot">
+    <img src="gui-improvements/current-develop.jpg" width="1800" height="1013" alt="Current ShopPhoto Develop view: top bar, presets rail, photo, histogram and Basic panel, filmstrip">
+    <a class="hot" href="#i1" style="left:52%;top:38%" data-title="1 · Before/after for every edit">1</a>
+    <a class="hot" href="#i2" style="left:88.4%;top:2.9%" data-title="2 · Viewport toolbar and navigator">2</a>
+    <a class="hot left" href="#i3" style="left:30.5%;top:9%" data-title="3 · Readable tool-mode hints">3</a>
+    <a class="hot" href="#i4" style="left:62%;top:84%" data-title="4 · Crop overlay">4</a>
+    <a class="hot" href="#i5" style="left:92%;top:56%" data-title="5 · Slider fill, units and reset">5</a>
+    <a class="hot" href="#i6" style="left:84.6%;top:47%" data-title="6 · Temperature scale">6</a>
+    <a class="hot" href="#i7" style="left:80%;top:29.7%" data-title="7 · Card state and per-group reset">7</a>
+    <a class="hot right" href="#i8" style="left:98.8%;top:70%" data-title="8 · Inspector navigation">8</a>
+    <a class="hot" href="#i9" style="left:86%;top:12%" data-title="9 · Histogram as a control">9</a>
+    <a class="hot left" href="#i11" style="left:8%;top:33%" data-title="11 · Presets with previews">11</a>
+    <a class="hot" href="#i12" style="left:82.5%;top:23.4%" data-title="12 · Readable history">12</a>
+    <a class="hot left" href="#i13" style="left:11.9%;top:2.9%" data-title="13–14 · Library grid and filters">13</a>
+    <a class="hot" href="#i15" style="left:38%;top:92.5%" data-title="15 · Filmstrip">15</a>
+    <a class="hot right" href="#i16" style="left:81.4%;top:2.9%" data-title="16 · Activity and status">16</a>
+  </div>
+</section>
+
+<section class="summary" aria-labelledby="sum-h">
+  <h2 id="sum-h">Summary</h2>
+  <table>
+    <thead><tr><th>#</th><th>Improvement</th><th>Area</th><th>Impact</th><th>Effort</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td><a href="#i1">Before/after for every edit: toggle, draggable split, side by side</a></td><td>Viewport</td><td><span class="pill hi">High</span></td><td><span class="pill eff">M</span></td></tr>
+      <tr><td>2</td><td><a href="#i2">Floating viewport toolbar: zoom presets, clipping toggles, navigator</a></td><td>Viewport</td><td><span class="pill hi">High</span></td><td><span class="pill eff">M</span></td></tr>
+      <tr><td>3</td><td><a href="#i3">Readable tool-mode banner with Done and Cancel</a></td><td>Viewport</td><td><span class="pill md">Medium</span></td><td><span class="pill eff">S</span></td></tr>
+      <tr><td>4</td><td><a href="#i4">Crop overlay: edge handles, thirds grid, aspect lock, Enter to commit</a></td><td>Viewport</td><td><span class="pill hi">High</span></td><td><span class="pill eff">M</span></td></tr>
+      <tr><td>5</td><td><a href="#i5">Sliders: fill from zero, units, visible modified state, reset, scrub and type</a></td><td>Inspector</td><td><span class="pill hi">High</span></td><td><span class="pill eff">S</span></td></tr>
+      <tr><td>6</td><td><a href="#i6">Perceptual temperature scale with a colour track</a></td><td>Inspector</td><td><span class="pill md">Medium</span></td><td><span class="pill eff">S</span></td></tr>
+      <tr><td>7</td><td><a href="#i7">Card headers show edits, reset one group, bypass a group, solo mode</a></td><td>Inspector</td><td><span class="pill hi">High</span></td><td><span class="pill eff">S</span></td></tr>
+      <tr><td>8</td><td><a href="#i8">Inspector navigation: sticky histogram, section jump bar, tool search, advanced disclosure</a></td><td>Inspector</td><td><span class="pill hi">High</span></td><td><span class="pill eff">M</span></td></tr>
+      <tr><td>9</td><td><a href="#i9">Histogram as a visible control: region highlight, clipping triangles, EXIF line</a></td><td>Inspector</td><td><span class="pill md">Medium</span></td><td><span class="pill eff">S</span></td></tr>
+      <tr><td>10</td><td><a href="#i10">Colour mixer with all bands visible, and real grading wheels</a></td><td>Inspector</td><td><span class="pill md">Medium</span></td><td><span class="pill eff">M</span></td></tr>
+      <tr><td>11</td><td><a href="#i11">Presets with thumbnails, hover preview and an Amount slider</a></td><td>Left rail</td><td><span class="pill md">Medium</span></td><td><span class="pill eff">M</span></td></tr>
+      <tr><td>12</td><td><a href="#i12">History that names each step, shows relative time, and previews on hover</a></td><td>Inspector</td><td><span class="pill hi">High</span></td><td><span class="pill eff">S</span></td></tr>
+      <tr><td>13</td><td><a href="#i13">Library grid: select without leaving the grid, rate the selection, visible flags</a></td><td>Library</td><td><span class="pill hi">High</span></td><td><span class="pill eff">M</span></td></tr>
+      <tr><td>14</td><td><a href="#i14">Filter bar with removable chips, and a selection action bar</a></td><td>Library</td><td><span class="pill md">Medium</span></td><td><span class="pill eff">M</span></td></tr>
+      <tr><td>15</td><td><a href="#i15">Filmstrip: aspect-true cells, rating and flag badges, position counter</a></td><td>Filmstrip</td><td><span class="pill md">Medium</span></td><td><span class="pill eff">S</span></td></tr>
+      <tr><td>16</td><td><a href="#i16">Activity indicator for background jobs, and a tidier status cluster</a></td><td>Top bar</td><td><span class="pill md">Medium</span></td><td><span class="pill eff">S</span></td></tr>
+      <tr><td>17</td><td><a href="#i17">Toasts with Undo, dismiss, pause on hover, and errors that stay</a></td><td>Feedback</td><td><span class="pill md">Medium</span></td><td><span class="pill eff">S</span></td></tr>
+      <tr><td>18</td><td><a href="#i18">Complete, searchable shortcut sheet, plus fixes for Tab and ⌘ leaks</a></td><td>Keyboard</td><td><span class="pill md">Medium</span></td><td><span class="pill eff">S</span></td></tr>
+    </tbody>
+  </table>
+  <p class="order"><b>Suggested order.</b> Quick wins first: 5, 7, 12, 17, 3, 6, 15, 18. Each is local to one function and together they change how the app feels day to day. Then the workflow items: 1, 2, 4, 13, 8. Then polish: 9, 10, 11, 14, 16.</p>
+</section>
+
+<!-- ================================================================ VIEWPORT -->
+<div class="group-title"><h2>Viewport</h2><span>What you look at most of the time</span></div>
+
+<article class="item" id="i1">
+  <div class="item-head"><span class="num">01</span><h3>Before/after for every edit: toggle, draggable split, side by side</h3><span class="pill hi">High</span><span class="pill eff">Effort M</span></div>
+  <div class="why">
+    <div>
+      <p>The only general comparison is <kbd>\</kbd>, which swaps the whole frame to the original. The only sign that it is active is an 11 px amber <b>BEFORE (\)</b> in the top bar, far from the image. There is a well-built draggable split with BEFORE/AFTER labels, but it only works for the AI denoise comparison, and you reach it through a checkbox buried in the Detail card.</p>
+      <p class="src">panels/chrome.rs:275–282 · panels/viewport.rs:465–511 · panels/develop.rs:946–967</p>
+    </div>
+    <ul>
+      <li>Generalise the existing split: "before" means the default <code>EditState</code>, or any snapshot or history step (see 12).</li>
+      <li>Modes are Toggle, Split and Side by side. <kbd>\</kbd> toggles and <kbd>Y</kbd> cycles modes, as in Lightroom.</li>
+      <li>Labels sit on the image, and the divider has a wide grab area.</li>
+      <li>Keep the denoise split as a special case: its before is the untouched sensor data.</li>
+    </ul>
+  </div>
+  <div class="compare">
+    <div class="pane before"><div class="pane-label">Before <em>current behaviour</em></div><div class="stage app" data-demo="compare-before" tabindex="-1"></div><p class="hint"><b>Try:</b> press <kbd>\</kbd> (or <b>Press \</b>), then find the indicator: it is in the top bar, not on the image.</p></div>
+    <div class="pane after"><div class="pane-label">After <em>proposal</em></div><div class="stage app" data-demo="compare-after" tabindex="-1"></div><p class="hint"><b>Try:</b> drag the divider, switch modes, press <kbd>Y</kbd> to cycle and <kbd>\</kbd> to toggle.</p></div>
+  </div>
+</article>
+
+<article class="item" id="i2">
+  <div class="item-head"><span class="num">02</span><h3>Floating viewport toolbar: zoom presets, clipping toggles, navigator</h3><span class="pill hi">High</span><span class="pill eff">Effort M</span></div>
+  <div class="why">
+    <div>
+      <p>Zoom has two states: a <b>Fit</b> pill in the top bar toggles to 100%, and pinch zooms freely. When you are zoomed into a 100 MP X2D file, nothing shows where you are in the frame. Clipping overlays are <kbd>J</kbd> and <kbd>O</kbd>, and their only visible switches are two checkboxes at the bottom of the <b>View</b> menu. The zoom level is repeated as faint 11 px text in the viewport corner.</p>
+      <p class="src">panels/chrome.rs:166–172, 256–266 · panels/viewport.rs:513–525</p>
+    </div>
+    <ul>
+      <li>A compact toolbar at the bottom of the viewport: Fit · Fill · 50 · 100 · 200, the two clipping toggles lit when on, and before/after.</li>
+      <li>A navigator appears while zoomed. Drag its rectangle to pan, or click anywhere in it to jump.</li>
+      <li>This frees top-bar space for 16.</li>
+    </ul>
+  </div>
+  <div class="compare">
+    <div class="pane before"><div class="pane-label">Before <em>current behaviour</em></div><div class="stage app" data-demo="zoom-before" tabindex="-1"></div><p class="hint"><b>Try:</b> click <b>Fit</b> to zoom, drag to pan, and press <kbd>O</kbd> or <kbd>J</kbd> for the clipping overlays.</p></div>
+    <div class="pane after"><div class="pane-label">After <em>proposal</em></div><div class="stage app" data-demo="zoom-after" tabindex="-1"></div><p class="hint"><b>Try:</b> pick a zoom level, drag the navigator rectangle, and toggle the clipping buttons.</p></div>
+  </div>
+</article>
+
+<article class="item" id="i3">
+  <div class="item-head"><span class="num">03</span><h3>Readable tool-mode banner with Done and Cancel</h3><span class="pill md">Medium</span><span class="pill eff">Effort S</span></div>
+  <div class="why">
+    <div>
+      <p>Six tool modes (colour-range pick, curve pipette, defringe pick, guided upright, heal/clone/brush, AI point pick) each paint their instruction straight onto the photo. It is white 11 px text with no backdrop, so on a bright sky it disappears. Crop tells you to go back to the Geometry card to finish, and none of the modes has a clickable way out.</p>
+      <p class="src">panels/viewport.rs:357–363, 384–390, 440–446, 577–586, 755–761, 843–849, 1231–1237</p>
+    </div>
+    <ul>
+      <li>One shared <code>tool_banner(ui, icon, title, hint)</code> helper: a translucent pill, centred at the top of the viewport.</li>
+      <li>Clickable <b>Cancel</b> and <b>Done</b> buttons with <kbd>Esc</kbd> and <kbd>↵</kbd> hints, the same in every mode.</li>
+      <li>It stays readable on any image, and all seven call sites, crop included, switch to the one helper.</li>
+    </ul>
+  </div>
+  <div class="compare">
+    <div class="pane before"><div class="pane-label">Before <em>current behaviour</em></div><div class="stage app" data-demo="toolhud-before" tabindex="-1"></div><p class="hint"><b>Try:</b> pick a tool below the image and look for the instruction in the sky.</p></div>
+    <div class="pane after"><div class="pane-label">After <em>proposal</em></div><div class="stage app" data-demo="toolhud-after" tabindex="-1"></div><p class="hint"><b>Try:</b> pick a tool, click the image, then use Done, Cancel, <kbd>↵</kbd> or <kbd>Esc</kbd>.</p></div>
+  </div>
+</article>
+
+<article class="item" id="i4">
+  <div class="item-head"><span class="num">04</span><h3>Crop overlay: edge handles, thirds grid, aspect lock, Enter to commit</h3><span class="pill hi">High</span><span class="pill eff">Effort M</span></div>
+  <div class="why">
+    <div>
+      <p>The crop rectangle has four small 3.6 px accent dots as handles, with no edge handles and no grid. Aspect ratios are one-shot menu items in the Geometry card, so the first corner drag breaks the ratio. There is no readout of the output size. You finish by toggling <b>Crop</b> in the inspector again.</p>
+      <p class="src">panels/viewport.rs:1165–1237 · panels/develop.rs:1270–1301 · panels/chrome.rs:5–14</p>
+    </div>
+    <ul>
+      <li>L-shaped corner handles and edge handles with hit targets of at least 14 px.</li>
+      <li>A rule-of-thirds grid while dragging. A locked aspect ratio that holds during corner drags, and <kbd>X</kbd> swaps orientation.</li>
+      <li>A live pixel and megapixel readout, useful before 2×2 supersampling.</li>
+      <li><kbd>↵</kbd> commits, <kbd>Esc</kbd> reverts, and the banner from 3 carries the same actions.</li>
+    </ul>
+  </div>
+  <div class="compare">
+    <div class="pane before"><div class="pane-label">Before <em>current behaviour</em></div><div class="stage app" data-demo="crop-before" tabindex="-1"></div><p class="hint"><b>Try:</b> grab a corner dot, which needs to be within 14 px, or drag inside to move. Apply an aspect ratio and then drag a corner.</p></div>
+    <div class="pane after"><div class="pane-label">After <em>proposal</em></div><div class="stage app" data-demo="crop-after" tabindex="-1"></div><p class="hint"><b>Try:</b> drag corners or edges, lock an aspect ratio, press <kbd>X</kbd> to rotate it, and <kbd>↵</kbd> to apply.</p></div>
+  </div>
+</article>
+
+<!-- ================================================================ INSPECTOR -->
+<div class="group-title"><h2>Develop inspector</h2><span>The right-hand panel and the presets rail</span></div>
+
+<article class="item" id="i5">
+  <div class="item-head"><span class="num">05</span><h3>Sliders: fill from zero, units, visible modified state, reset, scrub and type</h3><span class="pill hi">High</span><span class="pill eff">Effort S</span></div>
+  <div class="why">
+    <div>
+      <p><code>slider_trailing_fill = true</code> fills every track from its left end. A neutral Tint of 0 on a −150…150 range therefore looks half-applied, and the accent colour stops meaning "changed". Every value uses <code>fixed_decimals(1)</code>, which gives "5500.0" for kelvin and "1.3" for exposure, with no units. The only modified marker is a 1.8 px dot. Reset exists as a double-click, but nothing in the UI shows it.</p>
+      <p class="src">theme.rs:81 · panels/develop.rs:44–122 (param_slider), 19–38 (fixed_drag_value)</p>
+    </div>
+    <ul>
+      <li>Bipolar ranges fill from zero, with a tick at the neutral point. Unipolar ranges keep the left fill.</li>
+      <li>A per-parameter format: <code>+1.30 EV</code>, <code>5 500 K</code>, <code>−14</code>, <code>1.0 px</code>.</li>
+      <li>Changed values turn accent and a reset ↺ appears on hover. Double-click still works.</li>
+      <li>Scrub the label, click the number to type, use arrow keys on the thumb (<kbd>⇧</kbd> ×10, <kbd>⌥</kbd> ×0.1).</li>
+      <li>Keep <code>fixed_drag_value</code> so the row width stays stable while dragging, which is the existing and important guarantee.</li>
+    </ul>
+  </div>
+  <div class="compare">
+    <div class="pane before"><div class="pane-label">Before <em>current behaviour</em></div><div class="stage app" data-demo="sliders-before" tabindex="-1"></div><p class="hint"><b>Try:</b> which sliders are actually changed? Double-click a label to reset it.</p></div>
+    <div class="pane after"><div class="pane-label">After <em>proposal</em></div><div class="stage app" data-demo="sliders-after" tabindex="-1"></div><p class="hint"><b>Try:</b> drag a label left or right, click a number and type, hover a changed row for ↺, or Tab to a thumb and use the arrow keys.</p></div>
+  </div>
+</article>
+
+<article class="item" id="i6">
+  <div class="item-head"><span class="num">06</span><h3>Perceptual temperature scale with a colour track</h3><span class="pill md">Medium</span><span class="pill eff">Effort S</span></div>
+  <div class="why">
+    <div>
+      <p>Temp runs linearly from 2 000 to 50 000 K. The default of 5 500 K sits at 7% of the track, and the 2 500–10 000 K band that covers almost every photo gets about 16% of a roughly 150 px track. In that band one pixel of handle travel is over 300 K, which makes fine white-balance work a job for the number field.</p>
+      <p class="src">panels/develop.rs:731–739</p>
+    </div>
+    <ul>
+      <li>Map position through <code>log(K)</code>, or mireds, so steps feel even to the eye. 5 500 K lands near a third of the track and the daylight band gets roughly 2.7× more room.</li>
+      <li>Paint the track blue→amber for Temp and green→magenta for Tint, so the direction is obvious without reading.</li>
+      <li>Add a small eyedropper beside Temp to sample a neutral point.</li>
+    </ul>
+  </div>
+  <div class="compare">
+    <div class="pane before"><div class="pane-label">Before <em>linear 2 000–50 000 K</em></div><div class="stage app" data-demo="temp-before" tabindex="-1"></div><p class="hint"><b>Try:</b> land on exactly 6 500 K by dragging, and check the K-per-pixel readout.</p></div>
+    <div class="pane after"><div class="pane-label">After <em>log scale</em></div><div class="stage app" data-demo="temp-after" tabindex="-1"></div><p class="hint"><b>Try:</b> the same target, 6 500 K. The ruler shows where the room went.</p></div>
+  </div>
+</article>
+
+<article class="item" id="i7">
+  <div class="item-head"><span class="num">07</span><h3>Card headers show edits, reset one group, bypass a group, solo mode</h3><span class="pill hi">High</span><span class="pill eff">Effort S</span></div>
+  <div class="why">
+    <div>
+      <p>A collapsed card shows only its title, so you cannot tell whether Color or Effects contains edits without opening every card. There is exactly one reset: <b>Reset all edits</b>, placed between HDR and Metadata. You cannot reset only the Detail card, or switch a group off briefly to judge what it adds.</p>
+      <p class="src">panels/develop.rs:124–144 (tool_group), 1472–1478</p>
+    </div>
+    <ul>
+      <li>Header badge with the number of changed controls. Hover shows ↺ reset for that group.</li>
+      <li>An eye toggle bypasses the whole group for a quick before/after of just that group, with no history entry.</li>
+      <li>Optional solo mode (Lightroom's ⌥-click): opening one card closes the others.</li>
+      <li>Implementation: <code>tool_group</code> takes a <code>modified: usize</code> and returns header actions. <code>EditState</code> sub-structs already derive <code>PartialEq</code> against <code>Default</code>.</li>
+    </ul>
+  </div>
+  <div class="compare">
+    <div class="pane before"><div class="pane-label">Before <em>current behaviour</em></div><div class="stage app" data-demo="cards-before" tabindex="-1"></div><p class="hint"><b>Try:</b> collapse the cards. Which ones contain edits?</p></div>
+    <div class="pane after"><div class="pane-label">After <em>proposal</em></div><div class="stage app" data-demo="cards-after" tabindex="-1"></div><p class="hint"><b>Try:</b> click an eye to bypass a group, hover a header to reset it, and turn on Solo.</p></div>
+  </div>
+</article>
+
+<article class="item" id="i8">
+  <div class="item-head"><span class="num">08</span><h3>Inspector navigation: sticky histogram, section jump bar, tool search, advanced disclosure</h3><span class="pill hi">High</span><span class="pill eff">Effort M</span></div>
+  <div class="why">
+    <div>
+      <p>The inspector is one long scroll of 11 cards, and the histogram scrolls away with it. Lens Corrections expands to about 25 controls: two pickers, eight defringe sliders, three calibration buttons and a status line. That buries the three things you touch on most photos. There is no quick way to reach "Dehaze" or "Defringe" by name.</p>
+      <p class="src">panels/develop.rs:418–1522 (right_panel), 1007–1245 (Lens)</p>
+    </div>
+    <ul>
+      <li>Histogram and a jump bar are pinned at the top: Light · Color · Detail · Optics · Geometry · Output. The bar highlights the section in view.</li>
+      <li>Tool search. Type "fringe" and only the matching controls stay, with their cards open.</li>
+      <li>Each card shows its essentials, with an <b>Advanced · N more</b> disclosure whose state is remembered per card.</li>
+    </ul>
+  </div>
+  <div class="compare">
+    <div class="pane before"><div class="pane-label">Before <em>current behaviour</em></div><div class="stage app" data-demo="nav-before" tabindex="-1"></div><p class="hint"><b>Try:</b> find the Green fringe slider, then scroll back to the histogram.</p></div>
+    <div class="pane after"><div class="pane-label">After <em>proposal</em></div><div class="stage app" data-demo="nav-after" tabindex="-1"></div><p class="hint"><b>Try:</b> type <b>fringe</b> in search, click the jump chips, and open Advanced in Optics.</p></div>
+  </div>
+</article>
+
+<article class="item" id="i9">
+  <div class="item-head"><span class="num">09</span><h3>Histogram as a visible control: region highlight, clipping triangles, EXIF line</h3><span class="pill md">Medium</span><span class="pill eff">Effort S</span></div>
+  <div class="why">
+    <div>
+      <p>The histogram already works as a control. Dragging it horizontally edits Blacks, Shadows, Exposure, Highlights or Whites depending on where you start. Only a hover tooltip says so: there is no region highlight, no value readout and no cursor change. The clipping overlays have no presence here and live in the View menu.</p>
+      <p class="src">panels/develop.rs:1571–1695 · panels/chrome.rs:256–266</p>
+    </div>
+    <ul>
+      <li>On hover, tint the region under the pointer and label it. While dragging, show the value live.</li>
+      <li>Shadow and highlight clipping triangles sit in the corners. They light up when there is clipping, and a click toggles <kbd>J</kbd> or <kbd>O</kbd>.</li>
+      <li>A one-line EXIF strip underneath: ISO · shutter · aperture · focal length. The data is already in <code>state.meta</code>.</li>
+    </ul>
+  </div>
+  <div class="compare">
+    <div class="pane before"><div class="pane-label">Before <em>current behaviour</em></div><div class="stage app" data-demo="hist-before" tabindex="-1"></div><p class="hint"><b>Try:</b> drag across the histogram. Which control are you changing?</p></div>
+    <div class="pane after"><div class="pane-label">After <em>proposal</em></div><div class="stage app" data-demo="hist-after" tabindex="-1"></div><p class="hint"><b>Try:</b> hover the regions, drag Exposure right until the triangle lights, then click the triangle.</p></div>
+  </div>
+</article>
+
+<article class="item" id="i10">
+  <div class="item-head"><span class="num">10</span><h3>Colour mixer with all bands visible, and real grading wheels</h3><span class="pill md">Medium</span><span class="pill eff">Effort M</span></div>
+  <div class="why">
+    <div>
+      <p>HSL is eight unlabelled 22×16 swatches and three sliders for one band at a time, so you cannot see the whole adjustment at once. Colour grading is named <code>grading_wheel</code>, but it is a plain 0–360 Hue slider plus Amount for each range. You pick a hue by number, with no colour on the track.</p>
+      <p class="src">panels/develop.rs:1835–1909</p>
+    </div>
+    <ul>
+      <li>A mixer with Hue / Saturation / Luminance tabs. Eight labelled sliders with gradient tracks show what each band does.</li>
+      <li>Three real wheels (shadows, midtones, highlights). Drag the puck for hue and amount, double-click to reset, and <kbd>⇧</kbd>-drag keeps the hue fixed.</li>
+      <li>The preview strip shows the combined grade across the tonal range.</li>
+    </ul>
+  </div>
+  <div class="compare">
+    <div class="pane before"><div class="pane-label">Before <em>current behaviour</em></div><div class="stage app" data-demo="color-before" tabindex="-1"></div><p class="hint"><b>Try:</b> give the shadows a teal cast. Which number is teal?</p></div>
+    <div class="pane after"><div class="pane-label">After <em>proposal</em></div><div class="stage app" data-demo="color-after" tabindex="-1"></div><p class="hint"><b>Try:</b> drag the pucks, switch mixer tabs, and double-click a wheel to reset it.</p></div>
+  </div>
+</article>
+
+<article class="item" id="i11">
+  <div class="item-head"><span class="num">11</span><h3>Presets with thumbnails, hover preview and an Amount slider</h3><span class="pill md">Medium</span><span class="pill eff">Effort M</span></div>
+  <div class="why">
+    <div>
+      <p>The presets rail is a column of full-width text buttons. You learn what a preset does only by applying it, which adds an undo step each time. The Look combo box already previews on hover (<code>look_preview</code>), but presets do not. There is no way to apply a preset at partial strength, and edits made afterwards show as a trailing <b>*</b>.</p>
+      <p class="src">panels/chrome.rs:522–657 · panels/develop.rs:691–700 (look hover preview)</p>
+    </div>
+    <ul>
+      <li>A two-column thumbnail grid. Each tile renders the current photo through the preset, reusing the thumbnail proxy.</li>
+      <li>Hover previews on the main image without touching history. Click commits.</li>
+      <li>An Amount slider (0–100%) interpolates between the pre-preset state and the preset.</li>
+      <li>"Modified after applying" becomes a visible chip with a one-click re-apply.</li>
+    </ul>
+  </div>
+  <div class="compare">
+    <div class="pane before"><div class="pane-label">Before <em>current behaviour</em></div><div class="stage app" data-demo="presets-before" tabindex="-1"></div><p class="hint"><b>Try:</b> compare Film Warm with Film Cool. You have to click each one.</p></div>
+    <div class="pane after"><div class="pane-label">After <em>proposal</em></div><div class="stage app" data-demo="presets-after" tabindex="-1"></div><p class="hint"><b>Try:</b> hover the tiles to preview, click to apply, then change Amount.</p></div>
+  </div>
+</article>
+
+<article class="item" id="i12">
+  <div class="item-head"><span class="num">12</span><h3>History that names each step, shows relative time, and previews on hover</h3><span class="pill hi">High</span><span class="pill eff">Effort S</span></div>
+  <div class="why">
+    <div>
+      <p>Every recorded history entry is labelled <code>"Edit"</code>. The row prints <code>created_s</code> raw, so the list reads <b>Edit · 1790512345</b>, <b>Edit · 1790512391</b>… and cannot be used to find a step. "Snapshots &amp; history" is also the only plain collapsing header in the inspector that is not styled as a card.</p>
+      <p class="src">state.rs:536–540 (label: "Edit") · panels/develop.rs:447–525</p>
+    </div>
+    <ul>
+      <li>Label each step from a diff of the <code>EditState</code> before and after, for example "Exposure +0.60", "Highlights −14" or "Preset: Film Warm". Merge multi-control changes as "Basic · 3 changes".</li>
+      <li>Relative times ("2 min ago"), with the absolute time on hover.</li>
+      <li>Hover a step to preview it in the viewport. Click to jump. Steps after the current one stay greyed out as redo.</li>
+      <li>Snapshots get thumbnails and a "compare with current" action, which feeds 1.</li>
+    </ul>
+  </div>
+  <div class="compare">
+    <div class="pane before"><div class="pane-label">Before <em>current behaviour</em></div><div class="stage app" data-demo="history-before" tabindex="-1"></div><p class="hint"><b>Try:</b> return to the state from just before the preset was applied.</p></div>
+    <div class="pane after"><div class="pane-label">After <em>proposal</em></div><div class="stage app" data-demo="history-after" tabindex="-1"></div><p class="hint"><b>Try:</b> hover the steps to preview, click to jump, and save a snapshot.</p></div>
+  </div>
+</article>
+
+<!-- ================================================================ LIBRARY -->
+<div class="group-title"><h2>Library and filmstrip</h2><span>Culling and organising</span></div>
+
+<article class="item" id="i13">
+  <div class="item-head"><span class="num">13</span><h3>Library grid: select without leaving the grid, rate the selection, visible flags</h3><span class="pill hi">High</span><span class="pill eff">Effort M</span></div>
+  <div class="why">
+    <div>
+      <p>A plain click on a grid cell opens the photo and switches to Develop immediately. Selecting therefore needs <kbd>⌘</kbd>, and there is no <kbd>⇧</kbd> range select. Rating keys <kbd>0</kbd>–<kbd>5</kbd>, <kbd>P</kbd> and <kbd>X</kbd> apply to the photo open in Develop, not to what is selected in the grid. Ratings are drawn as ☆ text glyphs, and flags as the letters <b>P</b> and <b>X</b> in accent blue, so a reject looks exactly as prominent as a pick.</p>
+      <p class="src">panels/library.rs:702–764 · app/shortcuts.rs:106–144</p>
+    </div>
+    <ul>
+      <li>Click selects, <kbd>⇧</kbd> selects a range, <kbd>⌘</kbd> toggles, and double-click or <kbd>↵</kbd> opens in Develop. Arrow keys move the focus.</li>
+      <li>Rating, flag and colour-label keys apply to every selected photo.</li>
+      <li>Stars become clickable on hover. Pick is a green ✓, reject a red ✕ with the thumbnail dimmed, and colour labels show as a stripe.</li>
+    </ul>
+  </div>
+  <div class="compare">
+    <div class="pane before"><div class="pane-label">Before <em>current behaviour</em></div><div class="stage app" data-demo="grid-before" tabindex="-1"></div><p class="hint"><b>Try:</b> <kbd>⌘</kbd>-click three photos and press <kbd>3</kbd>. Then click a photo without <kbd>⌘</kbd>.</p></div>
+    <div class="pane after"><div class="pane-label">After <em>proposal</em></div><div class="stage app" data-demo="grid-after" tabindex="-1"></div><p class="hint"><b>Try:</b> click, then <kbd>⇧</kbd>-click, press <kbd>3</kbd>, <kbd>P</kbd>, <kbd>X</kbd> or <kbd>6</kbd>–<kbd>9</kbd>, click the stars, and double-click to open.</p></div>
+  </div>
+</article>
+
+<article class="item" id="i14">
+  <div class="item-head"><span class="num">14</span><h3>Filter bar with removable chips, and a selection action bar</h3><span class="pill md">Medium</span><span class="pill eff">Effort M</span></div>
+  <div class="why">
+    <div>
+      <p>The library header is one long row: search, <i>Rating ≥ 0 1 2 3 4 5</i>, flag, file type, colour, a Metadata filters menu, Smart collections and sort. Under it, the file operations (a rename-pattern field, Rename, Move…, Trash…, Undo file move) are always visible. When no photo is selected they sit greyed out. Nothing shows which filters are active or how many photos they hide.</p>
+      <p class="src">panels/library.rs:234–545</p>
+    </div>
+    <ul>
+      <li>A compact bar: search, clickable star threshold, flag toggles, colour dots, <b>More ▾</b>.</li>
+      <li>Every active filter becomes a chip with ×, plus "Showing 4 of 11" and <b>Clear</b>. The same chips can be saved as a smart collection.</li>
+      <li>File operations move to a bar that slides in only when there is a selection. Rename opens a popover with a live before→after name preview.</li>
+    </ul>
+  </div>
+  <div class="compare">
+    <div class="pane before"><div class="pane-label">Before <em>current behaviour</em></div><div class="stage app" data-demo="filter-before" tabindex="-1"></div><p class="hint"><b>Try:</b> set Rating ≥ 3 and flag Picked, then work out why the grid is so short.</p></div>
+    <div class="pane after"><div class="pane-label">After <em>proposal</em></div><div class="stage app" data-demo="filter-after" tabindex="-1"></div><p class="hint"><b>Try:</b> add filters, remove chips, select photos, then open Rename.</p></div>
+  </div>
+</article>
+
+<article class="item" id="i15">
+  <div class="item-head"><span class="num">15</span><h3>Filmstrip: aspect-true cells, rating and flag badges, position counter</h3><span class="pill md">Medium</span><span class="pill eff">Effort S</span></div>
+  <div class="why">
+    <div>
+      <p>Filmstrip cells are fixed 112×68 grey boxes, so portrait frames float in the middle with a lot of empty grey. The current photo gets a 2 px accent stroke outside the cell, and a selected photo gets a 2 px accent stroke inside it. The two look almost the same. The filmstrip shows no rating or flag, and no position ("12 of 148"). A file without a thumbnail shows its raw file name as text (visible in the screenshot).</p>
+      <p class="src">panels/library.rs:111–227</p>
+    </div>
+    <ul>
+      <li>Cells take the thumbnail's aspect ratio at a fixed height.</li>
+      <li>Current = accent ring plus lift. Selected = soft accent wash. The two are clearly different.</li>
+      <li>Stars, flag and edited badges sit along the bottom edge. A position counter and ‹ › buttons sit at the left.</li>
+      <li>Loading cells shimmer and show a type badge instead of a file name.</li>
+    </ul>
+  </div>
+  <div class="compare">
+    <div class="pane before"><div class="pane-label">Before <em>current behaviour</em></div><div class="stage app" data-demo="strip-before" tabindex="-1"></div><p class="hint"><b>Try:</b> <kbd>⌘</kbd>-click a few cells. Which one is open, and which are only selected?</p></div>
+    <div class="pane after"><div class="pane-label">After <em>proposal</em></div><div class="stage app" data-demo="strip-after" tabindex="-1"></div><p class="hint"><b>Try:</b> use <kbd>←</kbd> and <kbd>→</kbd>, <kbd>⌘</kbd>-click, and press <kbd>1</kbd>–<kbd>5</kbd> or <kbd>P</kbd>.</p></div>
+  </div>
+</article>
+
+<!-- ================================================================ FEEDBACK -->
+<div class="group-title"><h2>Feedback and keyboard</h2><span>How the app talks back</span></div>
+
+<article class="item" id="i16">
+  <div class="item-head"><span class="num">16</span><h3>Activity indicator for background jobs, and a tidier status cluster</h3><span class="pill md">Medium</span><span class="pill eff">Effort S</span></div>
+  <div class="why">
+    <div>
+      <p>When a batch Auto Finish, model download or AI mask runs, the only signal is a bullet in <b>Tools •</b>. Progress and Cancel are two menus deep (Tools ▸ Batch). The model-download progress bar exists only inside the Detail card. The SDR/HDR badge is a <code>Frame</code> in a right-to-left layout, and it renders taller than the pills next to it, which is visible in the screenshot above. PROOF and BEFORE labels pop in and out of the same row and shift it.</p>
+      <p class="src">panels/chrome.rs:62, 115–144, 272–348 · panels/develop.rs:973–979</p>
+    </div>
+    <ul>
+      <li>A progress ring in the top bar shows the job count and overall progress. Clicking it opens a popover with each job, a progress bar, the elapsed time and Cancel.</li>
+      <li>When a job finishes, the ring briefly becomes a ✓ and a toast is posted (see 17).</li>
+      <li>View state moves to the viewport toolbar (2). The HDR/SDR badge becomes a fixed-height pill of the same size as its neighbours.</li>
+    </ul>
+  </div>
+  <div class="compare">
+    <div class="pane before"><div class="pane-label">Before <em>current behaviour</em></div><div class="stage app" data-demo="jobs-before" tabindex="-1"></div><p class="hint"><b>Try:</b> start a job, then find its progress and cancel it.</p></div>
+    <div class="pane after"><div class="pane-label">After <em>proposal</em></div><div class="stage app" data-demo="jobs-after" tabindex="-1"></div><p class="hint"><b>Try:</b> start both jobs, click the ring, and cancel one.</p></div>
+  </div>
+</article>
+
+<article class="item" id="i17">
+  <div class="item-head"><span class="num">17</span><h3>Toasts with Undo, dismiss, pause on hover, and errors that stay</h3><span class="pill md">Medium</span><span class="pill eff">Effort S</span></div>
+  <div class="why">
+    <div>
+      <p>Every toast, including errors like "Could not export presets: …", disappears after a fixed 6 s. You cannot dismiss, pause or copy them. "Moved 3 photo(s) to trash" and "Settings synced" have undo operations in the app, but those are not offered where you would reach for them. Toasts also have no icon, so info and error differ only by text colour.</p>
+      <p class="src">state.rs:18, 601–614 · panels/dialogs.rs:825–863</p>
+    </div>
+    <ul>
+      <li>An icon and a countdown bar. Hover pauses the countdown, and × dismisses.</li>
+      <li>Errors stay until dismissed and have <b>Copy details</b>.</li>
+      <li>An optional action button, wired to the existing undo paths: <code>file_move_undo_requested</code>, <code>undo_sync_requested</code>.</li>
+      <li>At most three are visible, and older ones collapse into "+2 more".</li>
+    </ul>
+  </div>
+  <div class="compare">
+    <div class="pane before"><div class="pane-label">Before <em>current behaviour</em></div><div class="stage app" data-demo="toast-before" tabindex="-1"></div><p class="hint"><b>Try:</b> trigger an error and try to read it slowly.</p></div>
+    <div class="pane after"><div class="pane-label">After <em>proposal</em></div><div class="stage app" data-demo="toast-after" tabindex="-1"></div><p class="hint"><b>Try:</b> trash photos and click Undo, hover a toast, and trigger an error.</p></div>
+  </div>
+</article>
+
+<article class="item" id="i18">
+  <div class="item-head"><span class="num">18</span><h3>Complete, searchable shortcut sheet, plus fixes for Tab and ⌘ leaks</h3><span class="pill md">Medium</span><span class="pill eff">Effort S</span></div>
+  <div class="why">
+    <div>
+      <p>The <kbd>?</kbd> sheet lists 10 shortcuts. The handler implements more than 25, including <kbd>J</kbd>, <kbd>O</kbd>, <kbd>C</kbd>, <kbd>M</kbd>, <kbd>U</kbd>, <kbd>6</kbd>–<kbd>9</kbd>, <kbd>⌘Z</kbd>, <kbd>⇧⌘Z</kbd> and ⇧-double-click for Auto Exposure. Two behaviours conflict. <kbd>Tab</kbd> always hides the side panels, even though the accessibility audit relies on Tab for focus traversal. <kbd>E</kbd>, <kbd>D</kbd>, <kbd>G</kbd>, <kbd>P</kbd> and <kbd>X</kbd> ignore modifiers, so <kbd>⌘E</kbd> also opens Export.</p>
+      <p class="src">panels/dialogs.rs:865–893 · app/shortcuts.rs:74–146 · docs/accessibility-audit.md</p>
+    </div>
+    <ul>
+      <li>Generate the sheet from the same table the handler uses, grouped and searchable. Pressing a key highlights its row.</li>
+      <li>Tooltips append the shortcut, for example "Export the current developed image · E".</li>
+      <li>Only toggle panels on Tab when no widget has focus (<code>ctx.memory(|m| m.focused().is_none())</code>). Require <code>modifiers.is_none()</code> for single-letter keys.</li>
+    </ul>
+  </div>
+  <div class="compare">
+    <div class="pane before"><div class="pane-label">Before <em>current behaviour</em></div><div class="stage app" data-demo="keys-before" tabindex="-1"></div><p class="hint"><b>Try:</b> how do you show highlight clipping?</p></div>
+    <div class="pane after"><div class="pane-label">After <em>proposal</em></div><div class="stage app" data-demo="keys-after" tabindex="-1"></div><p class="hint"><b>Try:</b> type <b>clip</b>, or press any key, such as <kbd>O</kbd> or <kbd>⌘Z</kbd>.</p></div>
+  </div>
+</article>
+
+<footer>
+  The mocks are HTML reconstructions of the egui code, not captures, and the photo effects use CSS and SVG filters rather than the ShopPhoto pipeline. The structure, labels, sizes and colours follow the source files cited in each item. Assets live in <code>docs/gui-improvements/</code>. The photos are the existing research renders and a crop of the screenshot above.
+</footer>
+</div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs id="svg-defs"></defs></svg>
+<script src="gui-improvements/core.js"></script>
+<script src="gui-improvements/demos-viewport.js"></script>
+<script src="gui-improvements/demos-inspector.js"></script>
+<script src="gui-improvements/demos-library.js"></script>
+<script src="gui-improvements/demos-feedback.js"></script>
+<script>SP.boot();</script>
+</body>
+</html>

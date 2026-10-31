@@ -1,0 +1,42 @@
+/target
+*.spedit
+.DS_Store
+dist/
+
+# Local model workspace; never enters git.
+/models/
+
+# cargo-fuzz working state: corpus and crash artifacts are local, not source.
+fuzz/target
+fuzz/corpus
+fuzz/artifacts
+
+# Optional enhancement worker bytecode is generated locally.
+scripts/__pycache__/
+
+# Neural weights of any kind are installed on demand, never committed.
+# Location-independent.
+**/DenoiseModels/
+**/EnhancementModels/
+**/models/
+*.mlmodelc/
+*.mlpackage/
+*.mlmodel
+*.onnx
+*.safetensors
+*.pt
+*.pth
+*.ckpt
+weight.bin
+/export/
+*.key
+
+# Camera RAWs and app bundles never belong in git.
+*.3fr
+*.3FR
+*.fff
+*.FFF
+*.arw
+*.ARW
+*.dmg
+*.app/

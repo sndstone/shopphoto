@@ -1,0 +1,19 @@
+[package]
+name = "sp-core"
+description = "Shared types for ShopPhoto: image buffers, color types, edit parameters, errors"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[features]
+native-codecs = []
+
+[dependencies]
+serde = { workspace = true }
+thiserror = { workspace = true }
+base64 = "0.22"
+flate2 = "1"
+
+[dev-dependencies]
+serde_json = { workspace = true }

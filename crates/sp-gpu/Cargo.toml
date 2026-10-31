@@ -1,0 +1,20 @@
+[package]
+name = "sp-gpu"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+sp-core = { workspace = true }
+serde = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+wgpu = { workspace = true }
+bytemuck = { workspace = true }
+pollster = "0.4"
+
+[dev-dependencies]
+# Both precision variants of every shader are validated without a device
+# (BUILD.md §10.2); pinned to the naga wgpu 29 itself uses.
+naga = { version = "29", features = ["wgsl-in"] }

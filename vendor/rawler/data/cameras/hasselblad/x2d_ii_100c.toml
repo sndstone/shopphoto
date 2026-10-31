@@ -1,0 +1,20 @@
+make = "Hasselblad"
+model = "X2D II 100C"
+clean_make = "Hasselblad"
+clean_model = "X2D II 100C"
+color_pattern = "RGGB"
+hints = ["uncompressed"]
+
+# ShopPhoto vendored definition (upstream dnglab has none yet). The X2D II
+# shares the X2D 100C uncompressed 3FR layout and, until a dedicated matrix
+# is available, its X2D 100C color matrix as a close approximation.
+model_aliases = [["Hasselblad X2D II 100C", "X2D II 100C"]]
+
+# Masked sensor border measured on three X2D II frames (11904×8842 stored
+# landscape): left 124, top 92, right 116, bottom 0 columns/rows sit at the
+# 4096 black level. Phocus additionally trims 4 px per side and delivers
+# 11656×8742; these borders reproduce that framing exactly.
+active_area = [128, 96, 120, 4]
+
+[cameras.color_matrix]
+D65 = [0.6468, -0.1899, -0.0545, -0.4526, 1.2267, 0.2542, -0.0388, 0.1276, 0.6096]

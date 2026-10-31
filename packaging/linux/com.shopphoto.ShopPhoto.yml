@@ -1,0 +1,22 @@
+app-id: com.shopphoto.ShopPhoto
+runtime: org.freedesktop.Platform
+runtime-version: "24.08"
+sdk: org.freedesktop.Sdk
+command: shopphoto
+finish-args:
+  - --share=ipc
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --device=dri
+  - --filesystem=host
+modules:
+  - name: shopphoto
+    buildsystem: simple
+    build-commands:
+      - install -Dm755 shopphoto /app/bin/shopphoto
+      - install -Dm644 shopphoto.svg /app/share/icons/hicolor/scalable/apps/com.shopphoto.ShopPhoto.svg
+    sources:
+      - type: file
+        path: ../../target/release/shopphoto
+      - type: file
+        path: ../../assets/shopphoto.svg

@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Native AI options and crop sizing</title>
+<style>
+body{margin:0;color:var(--foreground);font-family:var(--font-sans,system-ui);background:transparent;line-height:1.5}*{box-sizing:border-box}h2{font-size:1.1rem;font-weight:500;margin:0 0 12px}h3{font-size:1rem;font-weight:500;margin:20px 0 10px}p{margin:8px 0;color:var(--muted-foreground)}a{color:var(--accent);text-underline-offset:3px}table{width:100%;border-collapse:collapse;font-size:.95rem}th,td{text-align:left;vertical-align:top;padding:10px 8px 10px 0;border-bottom:1px solid var(--border)}th{font-weight:500}td:first-child{width:27%}td small{display:block;color:var(--muted-foreground);font-size:.85rem}section+section{margin-top:24px}.inputs{display:flex;flex-wrap:wrap;gap:12px}label{display:grid;gap:5px;flex:1;min-width:140px}input,select{width:100%;background:var(--card);color:var(--foreground);border:1px solid var(--input,var(--border));border-radius:var(--radius,6px);font:inherit;padding:8px}output{display:block;font-size:1.15rem;font-variant-numeric:tabular-nums;margin:16px 0 8px}.areas{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.area{padding:16px;min-width:150px;flex:1;background:var(--muted);border-radius:var(--radius,6px)}.area strong{display:block;font-weight:500}.area small{color:var(--muted-foreground)}.preview{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}.preview img{display:block;width:100%;border-radius:var(--radius,6px)}figure{margin:0}figcaption{font-size:.85rem;color:var(--muted-foreground);margin-top:5px}@media(max-width:480px){table{font-size:.9rem}th:nth-child(2),td:nth-child(2){display:none}.preview{grid-template-columns:1fr}label{min-width:115px}.area{min-width:125px}}
+</style>
+</head>
+<body><main id="native-ai-research">
+<section aria-label="Open-source model comparison">
+<h2>Native AI candidates</h2>
+<p>Proposed model evaluation · native replacement is not shipped yet</p>
+<table><thead><tr><th>Model</th><th>Role</th><th>Fit for ShopPhoto</th></tr></thead><tbody>
+<tr><td><a href="https://huggingface.co/shi-labs/oneformer_ade20k_swin_tiny">OneFormer Tiny</a><small>MIT model card</small></td><td>Automatic classes</td><td>Sky, people, cars and motorbikes; evaluate native export and individual instances.</td></tr>
+<tr><td><a href="https://huggingface.co/apple/coreml-sam2-tiny">SAM 2 Core ML</a><small>Apache 2.0</small></td><td>Interactive refinement</td><td>Existing Apple conversion; use detections plus include/exclude points.</td></tr>
+<tr><td><a href="https://github.com/hustvl/ViTMatte">ViTMatte</a><small>MIT project</small></td><td>Edge alpha</td><td>Keep continuous hair, foliage and spoke boundaries; test full-resolution tiles.</td></tr>
+<tr><td><a href="https://github.com/JingyunLiang/SwinIR">SwinIR</a><small>Apache 2.0</small></td><td>Faithful 2× / 4×</td><td>Start with our existing 2× checkpoint; compare native output before switching.</td></tr>
+<tr><td><a href="https://github.com/xinntao/Real-ESRGAN">Real-ESRGAN</a><small>BSD-3-Clause project</small></td><td>Texture restoration</td><td>Optional alternative for degraded crops; inspect invented texture, text and faces.</td></tr>
+</tbody></table>
+</section>
+<section aria-label="Crop output sizing calculator">
+<h3>Crop → AI upscale → final output</h3>
+<div class="inputs">
+<label for="crop-w">Crop width · px<input id="crop-w" type="number" min="1" max="20000" value="1500"></label>
+<label for="crop-h">Crop height · px<input id="crop-h" type="number" min="1" max="20000" value="1000"></label>
+<label for="crop-scale">AI scale<select id="crop-scale"><option value="2">2×</option><option value="4">4×</option></select></label>
+</div>
+<output id="crop-output" aria-live="polite"></output>
+<div class="areas"><div class="area"><strong id="crop-input-value"></strong><small>Cropped source pixels</small></div><div class="area"><strong id="crop-final-value"></strong><small>Estimated output pixels</small></div></div>
+<p id="crop-limit">Added pixels estimate detail; the original photograph remains unchanged.</p>
+</section>
+
+</main>
+<script>
+(()=>{const root=document.getElementById('native-ai-research');const fields=['crop-w','crop-h','crop-scale'].map(id=>root.querySelector('#'+id));function update(){const [w,h,s]=fields.map(x=>Number(x.value));const valid=Number.isInteger(w)&&w>0&&w<=20000&&Number.isInteger(h)&&h>0&&h<=20000;const output=root.querySelector('#crop-output');if(!valid){output.textContent='Enter positive crop dimensions up to 20,000 px.';return;}const pixels=w*h*s*s;output.textContent=`${(w*s).toLocaleString()} × ${(h*s).toLocaleString()} px`;root.querySelector('#crop-input-value').textContent=`${(w*h/1e6).toFixed(2)} MP`;root.querySelector('#crop-final-value').textContent=`${(pixels/1e6).toFixed(2)} MP`;root.querySelector('#crop-limit').textContent=pixels>150e6?'Exceeds the current 150 MP output limit. Reduce the crop or scale.':'Added pixels estimate detail; the original photograph remains unchanged.';}fields.forEach(x=>x.addEventListener('input',update));update();console.assert(root.querySelector('#crop-output').textContent==='3,000 × 2,000 px','Initial crop output');fields[2].value='4';update();console.assert(root.querySelector('#crop-final-value').textContent==='24.00 MP','4x output');fields[2].value='2';update();console.log('Crop sizing: 2x and 4x checks passed.');})();
+</script>
+</body></html>

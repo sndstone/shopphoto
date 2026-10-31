@@ -1,0 +1,17 @@
+--- a/rawler/src/formats/tiff/value.rs
++++ b/rawler/src/formats/tiff/value.rs
+@@ -420,8 +420,12 @@
+ 
+   pub fn get_string(&self) -> Result<&String> {
+     match self {
+-      Self::Ascii(v) => Ok(&v.strings()[0]),
+-      _ => todo!(),
++      // ShopPhoto vendored patch: a malformed file can declare a non-ASCII
++      // type for a tag the decoders read as a string (Make/Model on the
++      // get_decoder path). Upstream's `todo!()` turns that into a panic in
++      // library code; return the error the signature already allows.
++      Self::Ascii(v) => v.strings().first().ok_or_else(|| TiffError::General("empty ASCII value".to_string())),
++      _ => Err(TiffError::General(format!("value is not a string: {:?}", self))),
+     }
+   }
+ 
