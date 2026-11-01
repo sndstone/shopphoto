@@ -10,6 +10,19 @@
 > retains the earlier release review. This file remains the
 > chronological engineering handoff and should not be read as the open-task list.
 
+**Local CI and README screenshots (unreleased, 2026-11-01):**
+CI now runs locally: `scripts/ci-local.sh` performs the GitHub workflow checks
+(committed-weights check, CMake, `cargo fmt --check`, clippy `-D warnings`,
+`cargo test --workspace`, visual regression, optional `--fuzz SECONDS`). The
+workflows only start by hand. The visual check uses the committed 1600×952
+reference on matching displays and otherwise a machine-specific baseline in
+`.ci-local/` (recorded on first run). The two preset test lint warnings are
+fixed. README gains four screenshots (`docs/images/readme/`) of one X1D II
+night frame: Develop, ShopPhoto RAW Denoise split at 200 %, Color and Export.
+Note: with the default highlight-recovery radius (2), that frame's strongly
+clipped water reflections show pink specks once exposure is not reduced;
+radius 32 and −0.5 EV were used for the screenshots.
+
 **0.5.0 ShopPhoto RAW Denoise (2026-10-31):**
 ShopPhoto's own `rawdenoise-lab` `r4_plain` model provides neural RAW
 denoise, offered for every Bayer RAW and bundled in every macOS build

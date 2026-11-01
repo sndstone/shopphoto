@@ -1,13 +1,8 @@
 name: Decoder fuzzing
+# Fuzz locally with scripts/ci-local.sh --fuzz SECONDS; this workflow only
+# runs when started by hand.
 on:
-  schedule:
-    - cron: "17 3 * * 1"
   workflow_dispatch:
-  push:
-    paths:
-      - "crates/sp-raw/**"
-      - "vendor/rawler/**"
-      - "fuzz/**"
 
 jobs:
   raw-decode:

@@ -1,7 +1,8 @@
 name: Release
+# Releases are built locally (scripts/bundle-macos.sh); start this workflow by
+# hand from a tag when hosted installers are wanted.
 on:
-  push:
-    tags: ["v*"]
+  workflow_dispatch:
 permissions:
   contents: write
 

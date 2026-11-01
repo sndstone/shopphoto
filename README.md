@@ -8,6 +8,35 @@ Hasselblad `.3FR` and `.fff` are first-class — including the X2D II 100C —
 alongside DNG and common Canon, Nikon, Sony, Fujifilm, Pentax,
 Panasonic/Leica, Olympus/OM, Phase One and other camera RAW families.
 
+## Screenshots
+
+All screenshots show one 51 MP Hasselblad X1D II night exposure (16 s, ISO 100)
+edited in ShopPhoto 0.5.0 on macOS.
+
+![The Develop view with presets on the left, the GPU-rendered photo in the middle and the Light tools on the right](docs/images/readme/develop.jpg)
+
+**Develop.** One-click presets with live thumbnails, the scene-referred GPU
+render, and Light, Color, Detail, Optics, Geometry and Output tools beside a
+live histogram.
+
+![ShopPhoto RAW Denoise at 200 % zoom in split view: the untouched sensor data on the left, the denoised result on the right](docs/images/readme/denoise.jpg)
+
+**ShopPhoto RAW Denoise.** The neural model runs on the Bayer sensor data
+before demosaic. Split view at 200 % with the shadows lifted: untouched sensor
+data on the left, the denoised result on the right.
+
+![The Color panel with vibrance, the eight-band color mixer and further color tools](docs/images/readme/color.jpg)
+
+**Color.** Vibrance and saturation, an eight-band color mixer in Oklab,
+channel mixer, selective color, skin-tone uniformity and three-way color
+grading.
+
+![The Export dialog with format, color space, output size and AI upscaling options](docs/images/readme/export.jpg)
+
+**Export.** Presets, JPEG, TIFF, PNG, AVIF and Ultra HDR in sRGB, Display P3,
+Rec.2020 or Adobe RGB, resize targets, optional AI upscaling and output
+sharpening.
+
 ## What it does
 
 The current development tree adds prioritized RAW navigation with bounded
@@ -118,11 +147,22 @@ Requires a recent stable Rust (MSRV 1.92) and a GPU that `wgpu` supports.
 cargo run --release -p sp-app
 ```
 
-Verify everything the way CI does:
+CI runs locally rather than on GitHub-hosted runners. One script runs the
+committed-weights check, `cargo fmt --check`, clippy with `-D warnings`,
+`cargo test --workspace` and the visual-regression screenshot on the current
+machine. The workflows in `.github/workflows` now only start by hand, so
+Windows and Linux builds and release packaging are no longer checked
+automatically:
 
 ```bash
-cargo fmt --all --check && cargo clippy --all-targets --workspace -- -D warnings && cargo test --workspace
+scripts/ci-local.sh                 # all checks except fuzzing
+scripts/ci-local.sh --skip-visual   # without the GUI screenshot comparison
+scripts/ci-local.sh --fuzz 300      # plus 5 minutes of RAW decoder fuzzing
 ```
+
+The visual check compares with the committed 1600×952 reference on matching
+displays; elsewhere it records a machine-specific baseline in `.ci-local/` on
+the first run and compares against that afterwards.
 
 GPU tests skip themselves cleanly when no adapter is available, so the suite
 runs on headless machines.

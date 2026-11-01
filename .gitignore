@@ -40,3 +40,6 @@ weight.bin
 *.ARW
 *.dmg
 *.app/
+
+# Local CI baselines (scripts/ci-local.sh); machine-specific.
+/.ci-local/
